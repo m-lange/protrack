@@ -1,6 +1,17 @@
 import { Fragment, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Avatar, Button, Spinner, Text, makeStyles, mergeClasses, tokens } from '@fluentui/react-components';
+import {
+  Avatar,
+  Button,
+  Spinner,
+  Text,
+  Toast,
+  ToastTitle,
+  makeStyles,
+  mergeClasses,
+  tokens,
+  useToastController,
+} from '@fluentui/react-components';
 import { Add24Regular, ChevronDown24Regular, ChevronUp24Regular } from '@fluentui/react-icons';
 import { PageLayout } from '../components/PageLayout';
 import { ProjectDialog } from '../components/ProjectDialog';
@@ -23,6 +34,7 @@ import type { ThemeMode } from '../theme/useThemeMode';
 import { dashboardPath, defaultMonthForYear, monthPath, projectsPath, settingsPath, yearPath } from '../utils/navigation';
 import { saveLastView } from '../utils/lastView';
 import { MONTH_NAMES } from '../utils/calendarGrid';
+import { APP_TOASTER_ID } from '../utils/toaster';
 
 /** Entries without a period sort first; otherwise ascending by start date (then end date). */
 function sortContingentsByPeriod(contingents: ContingentEntry[]): ContingentEntry[] {
@@ -168,10 +180,22 @@ export function ProjectsPage({ isDark, onSetThemeMode }: ProjectsPageProps) {
   const [contingentDialogOpen, setContingentDialogOpen] = useState(false);
   const [pendingConfirm, setPendingConfirm] = useState<{ message: string; onConfirm: () => void } | null>(null);
   const onManualBackup = useManualBackup();
+  const { dispatchToast } = useToastController(APP_TOASTER_ID);
 
   useEffect(() => {
     saveLastView(projectsPath(year));
   }, [year]);
+
+  const handleMove = (id: string, direction: 'up' | 'down') => {
+    moveProject(id, direction).catch(() => {
+      dispatchToast(
+        <Toast>
+          <ToastTitle>Reihenfolge konnte nicht gespeichert werden</ToastTitle>
+        </Toast>,
+        { intent: 'error' },
+      );
+    });
+  };
 
   const openNewProjectDialog = () => {
     setEditingProject(null);
@@ -346,7 +370,7 @@ export function ProjectsPage({ isDark, onSetThemeMode }: ProjectsPageProps) {
                   <Button
                     appearance="subtle"
                     icon={<ChevronUp24Regular />}
-                    onClick={() => moveProject(project.id, 'up')}
+                    onClick={() => handleMove(project.id, 'up')}
                     disabled={index === 0}
                     aria-label="Nach oben"
                     title="Nach oben"
@@ -354,7 +378,7 @@ export function ProjectsPage({ isDark, onSetThemeMode }: ProjectsPageProps) {
                   <Button
                     appearance="subtle"
                     icon={<ChevronDown24Regular />}
-                    onClick={() => moveProject(project.id, 'down')}
+                    onClick={() => handleMove(project.id, 'down')}
                     disabled={index === projects.length - 1}
                     aria-label="Nach unten"
                     title="Nach unten"

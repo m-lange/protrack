@@ -33,25 +33,33 @@ export function useProjects() {
     setProjects((prev) => (prev ?? []).filter((p) => p.id !== id));
   }, []);
 
-  const moveProject = useCallback(async (id: string, direction: 'up' | 'down') => {
-    setProjects((prev) => {
-      const list = [...(prev ?? [])].sort(byOrder);
+  const moveProject = useCallback(
+    async (id: string, direction: 'up' | 'down') => {
+      const list = [...(projects ?? [])].sort(byOrder);
       const index = list.findIndex((p) => p.id === id);
       const swapIndex = direction === 'up' ? index - 1 : index + 1;
       if (index === -1 || swapIndex < 0 || swapIndex >= list.length) {
-        return prev;
+        return;
       }
+
       const a = list[index];
       const b = list[swapIndex];
       const swappedA = { ...a, order: b.order };
       const swappedB = { ...b, order: a.order };
-      void saveProject(swappedA);
-      void saveProject(swappedB);
       list[index] = swappedB;
       list[swapIndex] = swappedA;
-      return list.sort(byOrder);
-    });
-  }, []);
+      setProjects(list.sort(byOrder));
+
+      try {
+        await Promise.all([saveProject(swappedA), saveProject(swappedB)]);
+      } catch (error) {
+        // Revert the optimistic swap so the UI matches what's actually in storage.
+        setProjects((prev) => (prev ?? []).map((p) => (p.id === a.id ? a : p.id === b.id ? b : p)).sort(byOrder));
+        throw error;
+      }
+    },
+    [projects],
+  );
 
   return { projects, upsertProject, removeProject, moveProject, nextOrder };
 }
