@@ -36,8 +36,12 @@ const useStyles = makeStyles({
     borderRadius: tokens.borderRadiusCircular,
     backgroundColor: 'rgba(0, 0, 0, 0.18)',
     color: 'inherit',
-    cursor: 'pointer',
     opacity: 0,
+  },
+  // Split from `removeButton` so a disabled (no `onRemove`) button falls back to a plain cursor
+  // instead of still looking clickable on hover.
+  removeButtonInteractive: {
+    cursor: 'pointer',
   },
   removeButtonVisible: {
     opacity: 1,
@@ -53,7 +57,8 @@ interface ProjectTagProps {
   dayLocation: WorkLocation | null;
   /** Arbeitsorte, die dieses Projekt an diesem Tag laut Kontingent-Vorgabe zulässt. */
   allowedLocations: WorkLocation[];
-  onRemove: () => void;
+  /** Omit for read-only usage (e.g. the Monatsübersicht sidebar) - hides the remove button entirely. */
+  onRemove?: () => void;
   onClick?: () => void;
 }
 
@@ -96,13 +101,25 @@ export function ProjectTag({
       <Text size={100} className={styles.hours} style={{ color: textColor }}>
         {formatHoursDe(hours)}h
       </Text>
+      {/* Always rendered (even read-only, without `onRemove`) so the tag's width/layout stays
+          identical everywhere it's used - disabled instead of omitted in that case. */}
       <button
         type="button"
-        className={mergeClasses(styles.removeButton, hovered && styles.removeButtonVisible)}
-        onClick={(event) => {
-          event.stopPropagation();
-          onRemove();
-        }}
+        className={mergeClasses(
+          styles.removeButton,
+          onRemove && styles.removeButtonInteractive,
+          onRemove && hovered && styles.removeButtonVisible,
+        )}
+        onClick={
+          onRemove &&
+          ((event) => {
+            event.stopPropagation();
+            onRemove();
+          })
+        }
+        disabled={!onRemove}
+        tabIndex={onRemove ? 0 : -1}
+        aria-hidden={!onRemove}
         aria-label="Zuordnung entfernen"
         title="Zuordnung entfernen"
       >
