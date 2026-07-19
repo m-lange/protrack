@@ -1,0 +1,93 @@
+:root {
+  color-scheme: light dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100vh;
+}
+
+body {
+  font-family:
+    'Proxima Nova',
+    'Segoe UI',
+    -apple-system,
+    BlinkMacSystemFont,
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+}
+
+/* Minimal, unobtrusive scrollbars app-wide, theme-aware via the manual
+   `data-theme` attribute (set in useThemeMode) or the OS preference. */
+:root {
+  --scrollbar-thumb: rgba(0, 0, 0, 0.22);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.38);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --scrollbar-thumb: rgba(255, 255, 255, 0.22);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.38);
+  }
+}
+
+:root[data-theme='dark'] {
+  --scrollbar-thumb: rgba(255, 255, 255, 0.22);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.38);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+/* Fluent v9 mounts Dialog/Popover/Combobox-listbox portals in a detached node
+   appended to <body>, reusing the FluentProvider theme class for CSS
+   variables. That class also carries the provider's own opaque
+   background-color, so the full-viewport portal wrapper silently paints over
+   the page behind any dialog even when the dialog's own backdrop is set
+   transparent. Force it transparent so only the dialog surface itself (which
+   sets its own background) is opaque.
+   The same node is also sized to cover the entire viewport (`position:
+   absolute`, full width/height) as soon as ANY Combobox/Dropdown gains focus
+   (even before it's "open"), with default `pointer-events: auto` - so its
+   empty space silently swallows the mouseup half of the very click that was
+   trying to open it (mousedown focuses the trigger and mounts this node;
+   mouseup then lands on the now-overlapping portal instead of the trigger).
+   `pointer-events: none` on the wrapper plus `auto` on its direct children
+   (the actual floating surfaces) fixes this without affecting real popups. */
+[data-portal-node='true'] {
+  background-color: transparent !important;
+  pointer-events: none;
+}
+[data-portal-node='true'] > * {
+  pointer-events: auto;
+}
