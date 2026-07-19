@@ -26,7 +26,7 @@ function App() {
   return (
     <FluentProvider theme={theme} className={styles.root}>
       <ErrorBoundary>
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
           <Routes>
             <Route path="/" element={<RootRedirect />} />
             <Route path="/projekte/:year" element={<ProjectsPage isDark={isDark} onSetThemeMode={setMode} />} />
