@@ -39,6 +39,7 @@ export interface Project {
   hasContingent: boolean;
   contingents: ContingentEntry[];
   notes: string;
+  archived: boolean;
 }
 
 export function emptyForecastMonths(): number[] {
@@ -160,6 +161,7 @@ export function createEmptyProject(order: number): Project {
     hasContingent: true,
     contingents: [],
     notes: '',
+    archived: false,
   };
 }
 
@@ -175,6 +177,7 @@ export function createEmptyProject(order: number): Project {
  *    project and each contingent entry).
  *  - `workLocations` (2026-07-19): missing, or containing invalid values, on any contingent entry
  *    older than this defaults to `[]` (no Arbeitsorte-Vorgabe/restriction).
+ *  - `archived` (2026-07-21): missing on any record older than this defaults to `false`.
  */
 export function normalizeProject(raw: Record<string, unknown>, fallbackOrder: number): Project {
   const rawContingents = Array.isArray(raw.contingents) ? (raw.contingents as Record<string, unknown>[]) : [];
@@ -233,5 +236,6 @@ export function normalizeProject(raw: Record<string, unknown>, fallbackOrder: nu
     hasContingent: typeof raw.hasContingent === 'boolean' ? raw.hasContingent : true,
     contingents,
     notes: typeof raw.notes === 'string' ? raw.notes : '',
+    archived: typeof raw.archived === 'boolean' ? raw.archived : false,
   };
 }

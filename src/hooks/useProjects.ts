@@ -34,8 +34,11 @@ export function useProjects() {
   }, []);
 
   const moveProject = useCallback(
-    async (id: string, direction: 'up' | 'down') => {
-      const list = [...(projects ?? [])].sort(byOrder);
+    // `scope` restricts the swap to a subset (e.g. only active or only archived projects) so the
+    // two lists, despite sharing the same `order` numbering, never swap a project past a boundary
+    // it can't see in its own list.
+    async (id: string, direction: 'up' | 'down', scope?: Project[]) => {
+      const list = [...(scope ?? projects ?? [])].sort(byOrder);
       const index = list.findIndex((p) => p.id === id);
       const swapIndex = direction === 'up' ? index - 1 : index + 1;
       if (index === -1 || swapIndex < 0 || swapIndex >= list.length) {
@@ -46,9 +49,9 @@ export function useProjects() {
       const b = list[swapIndex];
       const swappedA = { ...a, order: b.order };
       const swappedB = { ...b, order: a.order };
-      list[index] = swappedB;
-      list[swapIndex] = swappedA;
-      setProjects(list.sort(byOrder));
+      setProjects((prev) =>
+        (prev ?? []).map((p) => (p.id === a.id ? swappedA : p.id === b.id ? swappedB : p)).sort(byOrder),
+      );
 
       try {
         await Promise.all([saveProject(swappedA), saveProject(swappedB)]);

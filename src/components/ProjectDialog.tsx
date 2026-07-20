@@ -25,6 +25,7 @@ import {
   Checkmark24Regular,
   ChevronDown20Regular,
   Delete24Regular,
+  Dismiss24Regular,
   Organization24Regular,
   Premium24Regular,
   Scales24Regular,
@@ -116,6 +117,12 @@ const useStyles = makeStyles({
   chargeableButtonNeutral: {
     '& svg': { color: CHARGEABLE_COLORS.neutral },
   },
+  yesNoButtonYes: {
+    '& svg': { color: tokens.colorPaletteGreenForeground3 },
+  },
+  yesNoButtonNo: {
+    '& svg': { color: tokens.colorPaletteRedForeground3 },
+  },
   colorTrigger: {
     display: 'flex',
     alignItems: 'center',
@@ -170,6 +177,30 @@ const CHARGEABLE_OPTIONS: { value: Chargeable; label: string; Icon: FluentIcon }
   { value: 'no', label: 'Nein', Icon: Organization24Regular },
   { value: 'neutral', label: 'Neutral', Icon: Scales24Regular },
 ];
+
+function YesNoToggle({ label, value, onChange }: { label: string; value: boolean; onChange: (value: boolean) => void }) {
+  const styles = useStyles();
+  return (
+    <div className={styles.chargeableGroup}>
+      <ToggleButton
+        className={styles.yesNoButtonYes}
+        icon={<Checkmark24Regular />}
+        checked={value}
+        onClick={() => onChange(true)}
+        aria-label={`${label}: Ja`}
+        title={`${label}: Ja`}
+      />
+      <ToggleButton
+        className={styles.yesNoButtonNo}
+        icon={<Dismiss24Regular />}
+        checked={!value}
+        onClick={() => onChange(false)}
+        aria-label={`${label}: Nein`}
+        title={`${label}: Nein`}
+      />
+    </div>
+  );
+}
 
 interface ProjectDialogProps {
   open: boolean;
@@ -302,12 +333,18 @@ export function ProjectDialog({ open, project, nextOrder, onSave, onDelete, onCl
             </Field>
 
             <Field label="Kontingent" orientation="horizontal">
-              <ToggleButton
-                icon={<Checkmark24Regular />}
-                checked={draft.hasContingent}
-                onClick={() => setDraft((prev) => ({ ...prev, hasContingent: !prev.hasContingent }))}
-                aria-label="Festes Kontingent"
-                title="Festes Kontingent"
+              <YesNoToggle
+                label="Kontingent"
+                value={draft.hasContingent}
+                onChange={(value) => setDraft((prev) => ({ ...prev, hasContingent: value }))}
+              />
+            </Field>
+
+            <Field label="Archiviert" orientation="horizontal">
+              <YesNoToggle
+                label="Archiviert"
+                value={draft.archived}
+                onChange={(value) => setDraft((prev) => ({ ...prev, archived: value }))}
               />
             </Field>
 
