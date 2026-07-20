@@ -17,11 +17,16 @@ const useStyles = makeStyles({
   gridScroll: {
     overflowX: 'auto',
   },
+  // Full width statt max-content, mit der Projektspalte als einziger 1fr-Spur: füllt den ganzen
+  // Card-Innenraum, sodass rechts (Restkontingent) derselbe Abstand zum Kartenrand bleibt wie
+  // links (Projekt) - vorher blieb bei breiten Karten rechts ungenutzter Leerraum stehen, weil die
+  // max-content-Breite nie über die Summe der Spaltenbreiten hinauswuchs. Bei sehr schmalen
+  // Containern greifen die restlichen festen Spaltenbreiten weiterhin als Minimum und lösen wie
+  // zuvor `gridScroll`s horizontales Scrollen aus.
   grid: {
     display: 'grid',
-    gridTemplateColumns: `minmax(180px, max-content) 70px repeat(${WORK_LOCATIONS.length}, 56px) 90px 120px`,
-    width: 'max-content',
-    maxWidth: '100%',
+    gridTemplateColumns: `minmax(180px, 1fr) 70px repeat(${WORK_LOCATIONS.length}, 56px) 90px 120px`,
+    width: '100%',
   },
   headerCell: {
     paddingLeft: tokens.spacingHorizontalM,
@@ -60,6 +65,15 @@ const useStyles = makeStyles({
   projectCell: {
     gap: tokens.spacingHorizontalM,
   },
+  // Flex-Items schrumpfen standardmäßig nicht unter ihre Inhaltsbreite (min-width: auto) - erst
+  // mit minWidth 0 greift die Ellipsis statt der Browser-Default-Umbruch, wenn die Projektspalte
+  // (minmax(180px, ...)) auf ihr Minimum gedrückt wird.
+  projectName: {
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
   // Deutlicherer Abstand zur ersten Datenspalte ("Gesamt"), damit die Projektspalte klar als
   // eigener Block erkennbar bleibt statt eng an die Zahlenspalten heranzurücken.
   projectColumnGap: {
@@ -76,21 +90,41 @@ const useStyles = makeStyles({
     color: tokens.colorPaletteRedForeground2,
     fontWeight: tokens.fontWeightSemibold,
   },
+  emptyState: {
+    color: tokens.colorNeutralForeground3,
+    paddingInline: tokens.spacingHorizontalS,
+  },
+  // Overrides `.cell`'s borderBottom for the last project row - same shorthand property as the
+  // base style (not a longhand like borderBottomWidth), so Griffel's merge reliably wins here.
+  noBorder: {
+    borderBottom: 'none',
+  },
 });
 
 interface MonthProjectTableProps {
   summaries: MonthProjectSummary[];
+  /** Merged onto the root `Card` - lets the Monatsseite make this the one flexible tile in its KPI row. */
+  className?: string;
 }
 
-export function MonthProjectTable({ summaries }: MonthProjectTableProps) {
+export function MonthProjectTable({ summaries, className }: MonthProjectTableProps) {
   const styles = useStyles();
 
   if (summaries.length === 0) {
-    return null;
+    return (
+      <Card className={mergeClasses(styles.card, className)}>
+        <Text weight="semibold" size={400} className={styles.title}>
+          Gebuchte Tage
+        </Text>
+        <Text size={200} className={styles.emptyState}>
+          Noch keine Buchungen in diesem Monat.
+        </Text>
+      </Card>
+    );
   }
 
   return (
-    <Card className={styles.card}>
+    <Card className={mergeClasses(styles.card, className)}>
       <Text weight="semibold" size={400} className={styles.title}>
         Gebuchte Tage
       </Text>
@@ -120,18 +154,25 @@ export function MonthProjectTable({ summaries }: MonthProjectTableProps) {
             Restkontingent
           </div>
 
-          {summaries.map((summary) => {
+          {summaries.map((summary, index) => {
+            const isLastRow = index === summaries.length - 1;
             return (
               <Fragment key={summary.project.id}>
-                <div className={mergeClasses(styles.cell, styles.projectCell)} role="cell">
+                <div className={mergeClasses(styles.cell, styles.projectCell, isLastRow && styles.noBorder)} role="cell">
                   <ProjectAvatar project={summary.project} size={28} />
-                  <Text weight="semibold">{summary.project.name}</Text>
+                  <Text weight="semibold" className={styles.projectName}>
+                    {summary.project.name}
+                  </Text>
                 </div>
-                <div className={mergeClasses(styles.cell, styles.numberCell)} role="cell">
+                <div className={mergeClasses(styles.cell, styles.numberCell, isLastRow && styles.noBorder)} role="cell">
                   {formatHoursDe(summary.bookedDays)}
                 </div>
                 {WORK_LOCATIONS.map((loc) => (
-                  <div key={loc} className={mergeClasses(styles.cell, styles.numberCell, styles.secondary)} role="cell">
+                  <div
+                    key={loc}
+                    className={mergeClasses(styles.cell, styles.numberCell, styles.secondary, isLastRow && styles.noBorder)}
+                    role="cell"
+                  >
                     {summary.daysByLocation[loc] ? formatHoursDe(summary.daysByLocation[loc]!) : '–'}
                   </div>
                 ))}
@@ -140,6 +181,7 @@ export function MonthProjectTable({ summaries }: MonthProjectTableProps) {
                     styles.cell,
                     styles.numberCell,
                     summary.deviation !== 'onTrack' && styles.warning,
+                    isLastRow && styles.noBorder,
                   )}
                   role="cell"
                 >
@@ -154,6 +196,7 @@ export function MonthProjectTable({ summaries }: MonthProjectTableProps) {
                       : summary.remainingRatio !== null && summary.remainingRatio < 0.25
                         ? styles.warning
                         : undefined,
+                    isLastRow && styles.noBorder,
                   )}
                   role="cell"
                 >

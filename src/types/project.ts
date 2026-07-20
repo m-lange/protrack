@@ -50,6 +50,13 @@ export function totalDays(project: Project): number {
   return project.contingents.reduce((sum, entry) => sum + entry.days, 0);
 }
 
+/** Like `totalDays`, but only counts entries whose Von/Bis period overlaps `year` - use this wherever a Restkontingent is shown for a specific year, so an old contract from a past year doesn't inflate the total. */
+export function totalDaysForYear(project: Project, year: number): number {
+  return project.contingents
+    .filter((entry) => contingentAppliesToYear(entry, year))
+    .reduce((sum, entry) => sum + entry.days, 0);
+}
+
 export function contingentForecastTotal(entry: ContingentEntry, year: number): number {
   return (entry.forecastByYear[year] ?? emptyForecastMonths()).reduce((sum, value) => sum + value, 0);
 }

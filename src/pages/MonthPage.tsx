@@ -5,6 +5,7 @@ import { MonthOverview } from '../components/MonthOverview';
 import { MONTH_NAMES } from '../utils/calendarGrid';
 import { getHolidayMap } from '../utils/holidays';
 import { useResolvedYearSettings } from '../hooks/useYearSettings';
+import { DEFAULT_YEAR_SETTINGS } from '../types/yearSettings';
 import { useManualBackup } from '../hooks/useManualBackup';
 import type { ThemeMode } from '../theme/useThemeMode';
 import { dashboardPath, monthPath, projectsPath, settingsPath, yearPath } from '../utils/navigation';
@@ -29,7 +30,8 @@ export function MonthPage({ isDark, onSetThemeMode }: MonthPageProps) {
   }, [year, month1to12]);
 
   const resolvedSettings = useResolvedYearSettings(year);
-  const bundesland = resolvedSettings?.settings.bundesland ?? 'HB';
+  const settings = resolvedSettings?.settings;
+  const bundesland = settings?.bundesland ?? DEFAULT_YEAR_SETTINGS.bundesland;
   const holidayMap = useMemo(() => getHolidayMap(year, bundesland), [year, bundesland]);
   const onManualBackup = useManualBackup();
 
@@ -57,7 +59,15 @@ export function MonthPage({ isDark, onSetThemeMode }: MonthPageProps) {
       onOpenSettings={() => navigate(settingsPath())}
       onManualBackup={onManualBackup}
     >
-      <MonthOverview year={year} month={month0to11} holidayMap={holidayMap} bundesland={bundesland} />
+      <MonthOverview
+        year={year}
+        month={month0to11}
+        holidayMap={holidayMap}
+        bundesland={bundesland}
+        targetChargeability={settings?.targetChargeability ?? DEFAULT_YEAR_SETTINGS.targetChargeability}
+        targetKunde={settings?.targetKunde ?? DEFAULT_YEAR_SETTINGS.targetKunde}
+        targetBuero={settings?.targetBuero ?? DEFAULT_YEAR_SETTINGS.targetBuero}
+      />
     </PageLayout>
   );
 }

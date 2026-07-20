@@ -6,10 +6,19 @@ import type { Bundesland } from '../types/bundesland';
 import { useProjects } from '../hooks/useProjects';
 import { useDayAssignments } from '../hooks/useDayAssignments';
 import { resolveLocationForNewBooking } from '../types/dayAssignment';
-import { buildMonthProjectSummaries } from '../utils/dashboardAggregation';
+import {
+  buildMonthProjectSummaries,
+  buildMonthlyBookings,
+  buildMonthlyLocations,
+  chargeabilityPercent,
+  locationPercent,
+} from '../utils/dashboardAggregation';
+import { homeofficeTarget } from '../types/yearSettings';
+import { KPI_TILE_WIDTH } from '../utils/chartScale';
 import { MonthDayCell } from './MonthDayCell';
 import { EffortDistributionDialog } from './EffortDistributionDialog';
 import { MonthProjectTable } from './MonthProjectTable';
+import { KpiTile } from './dashboard/KpiTile';
 
 const useStyles = makeStyles({
   stack: {
@@ -82,6 +91,24 @@ const useStyles = makeStyles({
   today: {
     boxShadow: `inset 0 0 0 1.5px ${tokens.colorBrandStroke1}`,
   },
+  // Monats-KPIs neben der Gebuchte-Tage-Tabelle, immer in einer Reihe und gleicher Höhe
+  // (align-items stretch, Flex-Default). Nur die Tabelle ist flexibel und füllt den nach den vier
+  // festbreiten Kennzahl-Kacheln übrigen Platz - passt sich so als einzige der Fensterbreite an.
+  summaryRow: {
+    display: 'flex',
+    flexDirection: 'row',
+    gap: tokens.spacingHorizontalL,
+  },
+  tableFlex: {
+    flex: '1 1 auto',
+    minWidth: 0,
+  },
+  // Etwas schmaler als das Dashboard-Pendant (KPI_TILE_WIDTH) - hier stehen die Kacheln neben der
+  // deutlich breiteren Gebuchte-Tage-Tabelle statt in einer reinen Kachelreihe.
+  metricTile: {
+    flex: `0 0 ${KPI_TILE_WIDTH - 25}px`,
+    width: `${KPI_TILE_WIDTH - 25}px`,
+  },
 });
 
 interface MonthOverviewProps {
@@ -89,9 +116,20 @@ interface MonthOverviewProps {
   month: number;
   holidayMap: Map<string, string>;
   bundesland: Bundesland;
+  targetChargeability: number;
+  targetKunde: number;
+  targetBuero: number;
 }
 
-export function MonthOverview({ year, month, holidayMap, bundesland }: MonthOverviewProps) {
+export function MonthOverview({
+  year,
+  month,
+  holidayMap,
+  bundesland,
+  targetChargeability,
+  targetKunde,
+  targetBuero,
+}: MonthOverviewProps) {
   const styles = useStyles();
   const weeks = buildMonthGrid(year, month);
   const today = new Date();
@@ -106,6 +144,21 @@ export function MonthOverview({ year, month, holidayMap, bundesland }: MonthOver
     () => buildMonthProjectSummaries(projectList, assignments ?? [], year, month, bundesland),
     [projectList, assignments, year, month, bundesland],
   );
+
+  // Monats-KPIs (siehe summaryRow unten): dieselben Aggregations-Funktionen wie im Dashboard, hier
+  // aber je Monat statt Jahresdurchschnitt ausgewertet.
+  const monthlyBookings = useMemo(
+    () => buildMonthlyBookings(assignments ?? [], projects ?? [], year, bundesland),
+    [assignments, projects, year, bundesland],
+  );
+  const monthlyLocations = useMemo(() => buildMonthlyLocations(assignments ?? [], year), [assignments, year]);
+  const targetHomeoffice = homeofficeTarget(targetKunde, targetBuero);
+  const metricTiles = [
+    { key: 'chargeability', label: 'Chargeability', value: chargeabilityPercent(monthlyBookings, month), target: targetChargeability },
+    { key: 'buero', label: 'Büro', value: locationPercent(monthlyLocations, 'buero', month), target: targetBuero },
+    { key: 'kunde', label: 'Kunde', value: locationPercent(monthlyLocations, 'kunde', month), target: targetKunde },
+    { key: 'homeoffice', label: 'Home Office', value: locationPercent(monthlyLocations, 'homeoffice', month), target: targetHomeoffice },
+  ];
 
   return (
     <div className={styles.stack}>
@@ -185,7 +238,22 @@ export function MonthOverview({ year, month, holidayMap, bundesland }: MonthOver
         />
       </Card>
 
-      <MonthProjectTable summaries={monthSummaries} />
+      <div className={styles.summaryRow}>
+        <MonthProjectTable summaries={monthSummaries} className={styles.tableFlex} />
+        {metricTiles.map((tile) => {
+          const delta = tile.value === null ? null : tile.value - tile.target;
+          return (
+            <KpiTile
+              key={tile.key}
+              className={styles.metricTile}
+              label={tile.label}
+              value={tile.value === null ? '–' : `${tile.value.toFixed(1)}%`}
+              deltaText={delta === null ? undefined : `${delta >= 0 ? '+' : ''}${delta.toFixed(1)} % ggü. Ziel`}
+              deltaTone={delta === null ? 'neutral' : delta >= 0 ? 'positive' : 'negative'}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }

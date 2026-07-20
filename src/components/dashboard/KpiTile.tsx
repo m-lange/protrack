@@ -67,6 +67,8 @@ interface KpiTileProps {
   labelIcon?: ReactNode;
   /** Renders `label` like a project name (prominent) instead of a muted caption - for tiles that identify a project rather than a generic metric. */
   emphasizeLabel?: boolean;
+  /** Merged onto the root `Card`, e.g. to control width/flex behavior from the caller's layout. */
+  className?: string;
   children?: ReactNode;
 }
 
@@ -81,6 +83,7 @@ export function KpiTile({
   labelSuffix,
   labelIcon,
   emphasizeLabel,
+  className,
   children,
 }: KpiTileProps) {
   const styles = useStyles();
@@ -94,7 +97,7 @@ export function KpiTile({
           : styles.neutral;
 
   return (
-    <Card className={styles.card} title={hint}>
+    <Card className={mergeClasses(styles.card, className)} title={hint}>
       <div className={styles.labelRow}>
         {avatar}
         <Text size={200} className={mergeClasses(styles.label, emphasizeLabel && styles.labelEmphasized)}>

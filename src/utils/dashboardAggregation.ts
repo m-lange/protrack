@@ -1,6 +1,6 @@
 import type { Bundesland } from '../types/bundesland';
 import type { Chargeable, Project } from '../types/project';
-import { projectForecastMonth, totalDays } from '../types/project';
+import { projectForecastMonth, totalDaysForYear } from '../types/project';
 import type { DayAssignment } from '../types/dayAssignment';
 import type { WorkLocation } from '../types/workLocation';
 import { decemberSpecialDayDeductionHours, workingDaysByMonth } from './workingDays';
@@ -159,7 +159,7 @@ export function buildProjectYearSummaries(projects: Project[], bookings: Monthly
       (sum, value) => sum + value,
       0,
     );
-    const budgetDays = totalDays(project);
+    const budgetDays = totalDaysForYear(project, year);
     return {
       project,
       bookedDays,
@@ -341,7 +341,7 @@ export function buildMonthProjectSummaries(
     .filter((project) => bookedProjectIds.has(project.id))
     .map((project) => {
       const bookedDays = bookedDaysForProjectMonth(bookings, project.id, monthIndex);
-      const budgetDays = totalDays(project);
+      const budgetDays = totalDaysForYear(project, year);
       const hasContingent = project.hasContingent && budgetDays > 0;
       const remainingDays = hasContingent ? budgetDays - bookedDaysForProjectYear(bookings, project.id) : null;
       const forecastDays = hasContingent ? projectForecastMonth(project, year, monthIndex) : null;
