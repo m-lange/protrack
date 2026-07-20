@@ -1,6 +1,7 @@
 import type { MouseEventHandler, ReactNode } from 'react';
-import { Avatar, Text, makeStyles, mergeClasses, tokens } from '@fluentui/react-components';
+import { Text, makeStyles, mergeClasses, tokens } from '@fluentui/react-components';
 import { readableTextColor } from '../utils/color';
+import { ProjectAvatar } from './ProjectAvatar';
 import type { Project } from '../types/project';
 
 const useStyles = makeStyles({
@@ -17,8 +18,6 @@ const useStyles = makeStyles({
   },
   avatar: {
     flexShrink: 0,
-    border: '1px solid transparent',
-    borderRadius: tokens.borderRadiusCircular,
   },
   label: {
     flex: 1,
@@ -47,13 +46,7 @@ export function ProjectChip({ project, avatarSize = 16, className, children, ...
 
   return (
     <div className={mergeClasses(styles.chip, className)} style={{ backgroundColor: project.color, color: textColor }} {...handlers}>
-      <Avatar
-        className={styles.avatar}
-        style={{ borderColor: textColor }}
-        image={project.image ? { src: project.image } : undefined}
-        name={project.name || undefined}
-        size={avatarSize}
-      />
+      <ProjectAvatar project={project} size={avatarSize} className={styles.avatar} />
       <Text size={100} weight="semibold" className={styles.label} style={{ color: textColor }}>
         {project.name}
       </Text>

@@ -18,7 +18,7 @@ export const WORK_LOCATION_COLORS: Record<WorkLocation, string> = {
   abwesend: tokens.colorPaletteMarigoldBackground3,
 };
 
-/** The subset of `WorkLocation` compared against Ziel-% and plotted as a share of available hours in `WorkLocationChart`/KPI tiles - excludes `abwesend`, which has no meaningful share of "available" time (its hours are subtracted from the denominator, see `locationPercent`) and is shown instead as an absolute-hours segment in `LocationCompositionChart`. */
+/** The subset of `WorkLocation` compared against Ziel-% and plotted as a share of booked Kunde/Büro/Home-Office days in `WorkLocationChart`/KPI tiles (see `locationPercent`) - excludes `abwesend`, which has no meaningful share of that ratio and is shown instead as an absolute-hours segment in `LocationCompositionChart`. */
 export type ChartLocation = 'kunde' | 'buero' | 'homeoffice';
 
 export const CHART_LOCATIONS: ChartLocation[] = ['kunde', 'buero', 'homeoffice'];

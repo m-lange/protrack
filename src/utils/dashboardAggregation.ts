@@ -19,7 +19,7 @@ export interface MonthlyBookings {
   totalHoursByMonth: number[];
   /** Booked hours across all projects, split by the project's `chargeable` classification, 12 entries each. */
   hoursByChargeable: Record<Chargeable, number[]>;
-  /** Für Chargeability/Arbeitsort-% verfügbare Stunden pro Monat, 12 Einträge - siehe `computeAvailableHoursByMonth`. */
+  /** Für Chargeability-% verfügbare Stunden pro Monat, 12 Einträge - siehe `computeAvailableHoursByMonth`. */
   availableHoursByMonth: number[];
 }
 
@@ -30,9 +30,8 @@ function emptyMonthArray(): number[] {
 /**
  * Verfügbare Stunden pro Monat: Arbeitstage (Kalendertage minus Wochenende minus Feiertage) × 8 Std.,
  * abzüglich der auf "abwesend" gebuchten Stunden sowie - im Dezember - je 4 Std. für Heiligabend und
- * Silvester (siehe `decemberSpecialDayDeductionHours`). Bildet die gemeinsame Basis für
- * `chargeabilityPercent` und `locationPercent`, damit z.B. Urlaub die Chargeability nicht verwässert
- * und beide Kennzahlen denselben "verfügbare Zeit"-Nenner verwenden.
+ * Silvester (siehe `decemberSpecialDayDeductionHours`). Bildet den Nenner für `chargeabilityPercent`,
+ * damit z.B. Urlaub die Chargeability nicht verwässert.
  */
 function computeAvailableHoursByMonth(year: number, bundesland: Bundesland, abwesendHoursByMonth: number[]): number[] {
   const workingDays = workingDaysByMonth(year, bundesland);
@@ -97,12 +96,12 @@ export function bookedDaysForProjectYear(bookings: MonthlyBookings, projectId: s
   return hoursToDays(months.reduce((sum, hours) => sum + hours, 0));
 }
 
-/** Gebuchte verrechenbare Tage (chargeable = 'yes') pro Monat, 12 Einträge. */
+/** Gebuchte abrechenbare Tage (chargeable = 'yes') pro Monat, 12 Einträge. */
 export function bookedChargeableDaysByMonth(bookings: MonthlyBookings): number[] {
   return bookings.hoursByChargeable.yes.map(hoursToDays);
 }
 
-/** Forecast (Tage) der verrechenbaren Projekte (chargeable = 'yes') pro Monat, 12 Einträge - speist die "Prognose"-Linie im Verrechenbare-Tage-Chart. */
+/** Forecast (Tage) der verrechenbaren Projekte (chargeable = 'yes') pro Monat, 12 Einträge - speist die "Prognose"-Linie im Abrechenbare-Tage-Chart. */
 export function chargeableForecastByMonth(projects: Project[], year: number): number[] {
   const chargeableProjects = projects.filter((p) => p.chargeable === 'yes');
   return Array.from({ length: 12 }, (_, monthIndex) =>
@@ -200,19 +199,16 @@ export function findBiggestDeviation(projects: Project[], bookings: MonthlyBooki
 export interface MonthlyLocations {
   /** Anzahl Tage pro Arbeitsort, 12 Einträge je Ort (Index 0 = Januar). */
   daysByLocation: Record<WorkLocation, number[]>;
-  /** Für Chargeability/Arbeitsort-% verfügbare Stunden pro Monat, 12 Einträge - siehe `computeAvailableHoursByMonth`. */
-  availableHoursByMonth: number[];
 }
 
 /** Aggregates every `DayAssignment`'s Arbeitsort that falls in `year` into monthly "Tage" (Stunden/8) per `WorkLocation`. */
-export function buildMonthlyLocations(assignments: DayAssignment[], year: number, bundesland: Bundesland): MonthlyLocations {
+export function buildMonthlyLocations(assignments: DayAssignment[], year: number): MonthlyLocations {
   const daysByLocation: Record<WorkLocation, number[]> = {
     kunde: emptyMonthArray(),
     homeoffice: emptyMonthArray(),
     buero: emptyMonthArray(),
     abwesend: emptyMonthArray(),
   };
-  const abwesendHoursByMonth = emptyMonthArray();
   const yearPrefix = String(year);
 
   for (const assignment of assignments) {
@@ -221,35 +217,33 @@ export function buildMonthlyLocations(assignments: DayAssignment[], year: number
     const monthIndex = Number(assignment.date.slice(5, 7)) - 1;
     if (monthIndex < 0 || monthIndex > 11) continue;
     daysByLocation[assignment.location][monthIndex] += hoursToDays(assignment.hours);
-    if (assignment.location === 'abwesend') {
-      abwesendHoursByMonth[monthIndex] += assignment.hours;
-    }
   }
 
-  return { daysByLocation, availableHoursByMonth: computeAvailableHoursByMonth(year, bundesland, abwesendHoursByMonth) };
+  return { daysByLocation };
 }
 
+/** Kunde/Büro/Home Office bilden zusammen den Nenner für `locationPercent`/`locationPercentYear` - Abwesend zählt weder zum Zähler noch zum Nenner. */
+const CHART_LOCATIONS: WorkLocation[] = ['kunde', 'buero', 'homeoffice'];
+
 /**
- * Anteil eines Arbeitsorts an den im Monat verfügbaren Stunden (siehe `chargeabilityPercent` für
- * die Definition von "verfügbar"). Für `abwesend` selbst liefert das keinen sinnvollen Wert - dessen
- * Stunden sind bereits Teil des Abzugs, der die verfügbaren Stunden bildet, siehe
- * `computeAvailableHoursByMonth` - daher wird `abwesend` in der Dashboard-%-Ansicht (`WorkLocationChart`,
- * KPI-Kacheln) ausgespart und stattdessen als absoluter Stunden-/Tage-Wert angezeigt (`LocationCompositionChart`).
- * `null` nur wenn der Monat keine verfügbaren Stunden hat.
+ * Anteil eines Arbeitsorts (Kunde/Büro/Home Office) an den im Monat auf diese drei Orte gebuchten
+ * Tagen - rein das Verhältnis der gebuchten Tage untereinander, unabhängig von Arbeitstagen/Feiertagen/
+ * Abwesenheit. `abwesend` selbst ist als Ort hier nicht sinnvoll (siehe `CHART_LOCATIONS`) und wird
+ * stattdessen als absoluter Stunden-/Tage-Wert angezeigt (`LocationCompositionChart`). `null` nur wenn
+ * der Monat noch keine Kunde/Büro/Home-Office-Buchung hat.
  */
 export function locationPercent(monthly: MonthlyLocations, location: WorkLocation, monthIndex: number): number | null {
-  const availableHours = monthly.availableHoursByMonth[monthIndex];
-  if (availableHours <= 0) return null;
-  const locationHours = monthly.daysByLocation[location][monthIndex] * HOURS_PER_DAY;
-  return (locationHours / availableHours) * 100;
+  const totalDays = CHART_LOCATIONS.reduce((sum, key) => sum + monthly.daysByLocation[key][monthIndex], 0);
+  if (totalDays <= 0) return null;
+  return (monthly.daysByLocation[location][monthIndex] / totalDays) * 100;
 }
 
 /** `monthsToInclude` - see `chargeabilityPercentYear` for why the current year caps this at the current month. */
 export function locationPercentYear(monthly: MonthlyLocations, location: WorkLocation, monthsToInclude = 12): number | null {
-  const totalAvailableHours = monthly.availableHoursByMonth.slice(0, monthsToInclude).reduce((sum, hours) => sum + hours, 0);
-  if (totalAvailableHours <= 0) return null;
-  const totalDaysAtLocation = monthly.daysByLocation[location].slice(0, monthsToInclude).reduce((sum, days) => sum + days, 0);
-  return ((totalDaysAtLocation * HOURS_PER_DAY) / totalAvailableHours) * 100;
+  const daysOverRange = (key: WorkLocation) => monthly.daysByLocation[key].slice(0, monthsToInclude).reduce((sum, days) => sum + days, 0);
+  const totalDays = CHART_LOCATIONS.reduce((sum, key) => sum + daysOverRange(key), 0);
+  if (totalDays <= 0) return null;
+  return (daysOverRange(location) / totalDays) * 100;
 }
 
 export function emptyWorkLocationRecord(): Record<WorkLocation, number[]> {

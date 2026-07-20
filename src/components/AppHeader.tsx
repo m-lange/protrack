@@ -26,6 +26,11 @@ const useStyles = makeStyles({
     borderBottomWidth: tokens.strokeWidthThin,
     borderBottomStyle: 'solid',
     borderBottomColor: tokens.colorNeutralStroke2,
+    position: 'sticky',
+    top: 0,
+    zIndex: 100,
+    flexShrink: 0,
+    backgroundColor: tokens.colorNeutralBackground2,
   },
   left: {
     display: 'flex',

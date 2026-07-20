@@ -6,7 +6,7 @@ export interface YearSettings {
   targetChargeability: number;
   targetKunde: number;
   targetBuero: number;
-  /** Ziel für gebuchte verrechenbare Tage im Jahr. */
+  /** Ziel für gebuchte abrechenbare Tage im Jahr. */
   targetChargeableDays: number;
 }
 

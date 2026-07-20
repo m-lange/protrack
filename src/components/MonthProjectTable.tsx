@@ -1,8 +1,9 @@
 import { Fragment } from 'react';
-import { Avatar, Card, Text, makeStyles, mergeClasses, tokens } from '@fluentui/react-components';
+import { Card, Text, makeStyles, mergeClasses, tokens } from '@fluentui/react-components';
 import type { MonthProjectSummary } from '../utils/dashboardAggregation';
 import { WORK_LOCATION_LABELS, WORK_LOCATIONS } from '../types/workLocation';
 import { formatHoursDe } from '../utils/format';
+import { ProjectAvatar } from './ProjectAvatar';
 import { WorkLocationIcon } from './WorkLocationIcon';
 
 const useStyles = makeStyles({
@@ -123,11 +124,7 @@ export function MonthProjectTable({ summaries }: MonthProjectTableProps) {
             return (
               <Fragment key={summary.project.id}>
                 <div className={mergeClasses(styles.cell, styles.projectCell)} role="cell">
-                  <Avatar
-                    image={summary.project.image ? { src: summary.project.image } : undefined}
-                    name={summary.project.name || undefined}
-                    size={28}
-                  />
+                  <ProjectAvatar project={summary.project} size={28} />
                   <Text weight="semibold">{summary.project.name}</Text>
                 </div>
                 <div className={mergeClasses(styles.cell, styles.numberCell)} role="cell">

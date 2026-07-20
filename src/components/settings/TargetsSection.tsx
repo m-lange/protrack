@@ -63,7 +63,7 @@ export function TargetsSection({ settings, inheritedFromYear, onChange }: Target
           onChange={(_event, data) => onChange({ ...settings, targetBuero: Number(data.value) || 0 })}
         />
       </Field>
-      <Field className={styles.field} label="Verrechenbare Tage" orientation="horizontal">
+      <Field className={styles.field} label="Abrechenbare Tage" orientation="horizontal">
         <Input
           type="number"
           min={0}

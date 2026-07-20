@@ -135,18 +135,18 @@ const useStyles = makeStyles({
 });
 
 interface ChargeableDaysChartProps {
-  /** Gebuchte verrechenbare Tage pro Monat (nicht kumuliert), 12 Einträge - wird intern kumuliert. */
+  /** Gebuchte abrechenbare Tage pro Monat (nicht kumuliert), 12 Einträge - wird intern kumuliert. */
   bookedByMonth: number[];
   /** Forecast (Tage) der verrechenbaren Projekte pro Monat (nicht kumuliert), 12 Einträge - wird intern kumuliert. */
   forecastByMonth: number[];
-  /** Jahresziel für verrechenbare Tage (z.B. aus den YearSettings) - als exakte, flache Ziellinie eingezeichnet. */
+  /** Jahresziel für abrechenbare Tage (z.B. aus den YearSettings) - als exakte, flache Ziellinie eingezeichnet. */
   target: number;
   /** Monate, für die Gebucht/Prognose tatsächlich geplottet werden (1-12) - wie in `BurnUpChart`. */
   monthsToInclude?: number;
 }
 
 /**
- * Verrechenbare Tage kumuliert übers Jahr: gebuchte Tage (Linie + Punkte), Prognose der
+ * Abrechenbare Tage kumuliert übers Jahr: gebuchte Tage (Linie + Punkte), Prognose der
  * verrechenbaren Projekte (gestrichelt) und eine gerade Hochrechnungs-Linie, die das bisherige
  * Ø-Tempo linear aufs ganze Jahr fortschreibt - zeigt auf einen Blick, ob man bei diesem Tempo das
  * (exakte, flache) Jahresziel erreichen würde. Dazu die Ziellinie selbst als Referenz.
@@ -200,13 +200,13 @@ export function ChargeableDaysChart({ bookedByMonth, forecastByMonth, target, mo
   return (
     <div className={styles.root}>
       <div className={styles.titleRow}>
-        <Text weight="semibold">Verrechenbare Tage</Text>
+        <Text weight="semibold">Abrechenbare Tage</Text>
         <Text size={200} className={styles.targetHint}>
           Ziel {formatHoursDe(target)} Tage/Jahr
         </Text>
       </div>
       <div className={styles.svgWrap}>
-        <svg className={styles.svg} viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} role="img" aria-label="Verrechenbare Tage, kumuliert übers Jahr">
+        <svg className={styles.svg} viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} role="img" aria-label="Abrechenbare Tage, kumuliert übers Jahr">
           {yTicks.map((tick) => {
             const y = scaleY(tick);
             return (

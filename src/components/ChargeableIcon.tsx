@@ -6,6 +6,7 @@ const useStyles = makeStyles({
   icon: {
     width: '14px',
     height: '14px',
+    flexShrink: 0,
     marginLeft: tokens.spacingHorizontalXS,
   },
 });

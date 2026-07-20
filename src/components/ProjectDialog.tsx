@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  Avatar,
   Button,
   ColorSwatch,
   Dialog,
@@ -33,6 +32,7 @@ import {
 } from '@fluentui/react-icons';
 import { suggestedProjectColors } from '../theme/palette';
 import { CHARGEABLE_COLORS, createEmptyProject, type Chargeable, type Project } from '../types/project';
+import { ProjectAvatar } from './ProjectAvatar';
 
 const ACCEPTED_IMAGE_TYPES = 'image/png,image/jpeg,image/svg+xml';
 
@@ -246,7 +246,7 @@ export function ProjectDialog({ open, project, nextOrder, onSave, onDelete, onCl
                   onClick={() => fileInputRef.current?.click()}
                   title="Bild ändern"
                 >
-                  <Avatar image={draft.image ? { src: draft.image } : undefined} name={draft.name || undefined} size={72} />
+                  <ProjectAvatar project={draft} size={72} />
                   <span className={styles.avatarOverlay}>
                     <Camera24Regular />
                   </span>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Avatar, Text, makeStyles, tokens } from '@fluentui/react-components';
+import { Text, makeStyles, tokens } from '@fluentui/react-components';
+import { ProjectAvatar } from '../ProjectAvatar';
 import { MONTH_NAMES } from '../../utils/calendarGrid';
 import {
   CHART_VIEW_WIDTH,
@@ -192,12 +193,7 @@ export function BurnUpChart({ project, budgetDays, budgetByMonth, bookedByMonth,
   return (
     <div className={styles.root}>
       <div className={styles.titleRow}>
-        <Avatar
-          className={styles.avatar}
-          image={project.image ? { src: project.image } : undefined}
-          name={project.name || undefined}
-          size={20}
-        />
+        <ProjectAvatar project={project} size={20} className={styles.avatar} />
         <ProjectNameCluster project={project} />
       </div>
       <div className={styles.svgWrap}>

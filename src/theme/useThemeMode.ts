@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Theme } from '@fluentui/react-components';
-import { paletteDarkTheme, paletteLightTheme } from './palette';
+import { darkPalette, lightPalette, paletteDarkTheme, paletteLightTheme } from './palette';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -42,6 +42,11 @@ export function useThemeMode(): UseThemeModeResult {
 
   useEffect(() => {
     document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+    // Keeps the PWA window/title bar (theme-color) in sync with the app's own background -
+    // static <meta>/manifest values only cover the OS-preference default, not a manual toggle.
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', isDark ? darkPalette.background : lightPalette.background);
   }, [isDark]);
 
   return { mode, setMode, isDark, theme: isDark ? paletteDarkTheme : paletteLightTheme };

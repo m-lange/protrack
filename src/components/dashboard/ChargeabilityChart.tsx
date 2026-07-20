@@ -65,6 +65,18 @@ const useStyles = makeStyles({
     fill: tokens.colorPaletteMarigoldForeground2,
     fontSize: '10px',
   },
+  // Lavender for the average line - same "computed reference" color used by the Hochrechnung
+  // line in ChargeableDaysChart, so the dashboard uses one consistent color language: marigold
+  // for a manually-set Ziel, lavender for a value derived from the actual bookings.
+  averageLine: {
+    stroke: tokens.colorPaletteLavenderBorderActive,
+    strokeWidth: 1,
+    strokeDasharray: '2 3',
+  },
+  averageLabel: {
+    fill: tokens.colorPaletteLavenderForeground2,
+    fontSize: '10px',
+  },
   area: {
     fill: tokens.colorCompoundBrandBackground,
     opacity: 0.12,
@@ -117,15 +129,17 @@ interface ChargeabilityChartProps {
   /** Percent per month (0-100), `null` for months without working days. */
   values: (number | null)[];
   target: number;
+  /** Hours-weighted Ø Chargeability over the plotted months (same value as the KPI tile), `null` if no month has data yet. */
+  average: number | null;
 }
 
-/** Line chart of monthly chargeability (%), with a dashed, fixed target reference line. */
-export function ChargeabilityChart({ values, target }: ChargeabilityChartProps) {
+/** Line chart of monthly chargeability (%), with a dashed, fixed target reference line and a dashed Ø reference line. */
+export function ChargeabilityChart({ values, target, average }: ChargeabilityChartProps) {
   const styles = useStyles();
   const [hovered, setHovered] = useState<number | null>(null);
 
   const numericValues = values.filter((value): value is number => value !== null);
-  const yMax = Math.max(100, Math.ceil(Math.max(0, target, ...numericValues) / Y_AXIS_STEP) * Y_AXIS_STEP);
+  const yMax = Math.max(100, Math.ceil(Math.max(0, target, average ?? 0, ...numericValues) / Y_AXIS_STEP) * Y_AXIS_STEP);
 
   const scaleY = (value: number) => MARGIN.top + PLOT_H - (value / yMax) * PLOT_H;
   const xForMonth = (monthIndex: number) => MARGIN.left + monthIndex * SLOT_W + SLOT_W / 2;
@@ -159,6 +173,7 @@ export function ChargeabilityChart({ values, target }: ChargeabilityChartProps) 
   });
 
   const targetY = scaleY(Math.max(0, target));
+  const averageY = average === null ? null : scaleY(Math.max(0, average));
   const ticks = Array.from({ length: yMax / Y_AXIS_STEP + 1 }, (_, i) => i * Y_AXIS_STEP);
 
   return (
@@ -166,7 +181,7 @@ export function ChargeabilityChart({ values, target }: ChargeabilityChartProps) 
       <div className={styles.titleRow}>
         <Text weight="semibold">Chargeability</Text>
         <Text size={200} className={styles.targetHint}>
-          Ziel {target}% · verrechenbare Tage. ÷ verfügbare Tage
+          Ziel {target}% · abrechenbare Tage. ÷ verfügbare Tage
         </Text>
       </div>
       <div className={styles.svgWrap}>
@@ -201,6 +216,15 @@ export function ChargeabilityChart({ values, target }: ChargeabilityChartProps) 
           <text x={VIEW_W - MARGIN.right} y={targetY - 4} textAnchor="end" className={styles.targetLabel}>
             Ziel {target}%
           </text>
+
+          {averageY !== null && (
+            <>
+              <line x1={MARGIN.left} x2={VIEW_W - MARGIN.right} y1={averageY} y2={averageY} className={styles.averageLine} />
+              <text x={MARGIN.left + 4} y={averageY - 4} textAnchor="start" className={styles.averageLabel}>
+                Ø {average!.toFixed(1)}%
+              </text>
+            </>
+          )}
 
           {hovered !== null && (
             <line
@@ -254,6 +278,15 @@ export function ChargeabilityChart({ values, target }: ChargeabilityChartProps) 
                 <Text size={200}>
                   {values[hovered]! - target >= 0 ? '+' : ''}
                   {(values[hovered]! - target).toFixed(1)} Pkt.
+                </Text>
+              </div>
+            )}
+            {values[hovered] !== null && average !== null && (
+              <div className={styles.tooltipRow}>
+                <Text size={200}>ggü. Ø</Text>
+                <Text size={200}>
+                  {values[hovered]! - average >= 0 ? '+' : ''}
+                  {(values[hovered]! - average).toFixed(1)} Pkt.
                 </Text>
               </div>
             )}

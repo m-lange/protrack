@@ -1,7 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Avatar,
   Button,
   Spinner,
   Text,
@@ -24,6 +23,7 @@ import { ProjectDialog } from '../components/ProjectDialog';
 import { ContingentDialog } from '../components/ContingentDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { InlineNumberInput } from '../components/InlineNumberInput';
+import { ProjectAvatar } from '../components/ProjectAvatar';
 import { ProjectNameCluster } from '../components/ProjectNameCluster';
 import { WorkLocationIcon } from '../components/WorkLocationIcon';
 import { useDayAssignments } from '../hooks/useDayAssignments';
@@ -71,9 +71,9 @@ const useStyles = makeStyles({
   // so no per-row layout algorithm can ever drift two rows' columns out of alignment.
   grid: {
     display: 'grid',
-    gridTemplateColumns: '32px 40px 44px minmax(260px, 1fr) 90px repeat(12, 76px) 84px',
+    gridTemplateColumns: '32px 44px minmax(260px, 1fr) 90px repeat(12, 76px) 84px',
     width: '100%',
-    minWidth: '1462px',
+    minWidth: '1422px',
   },
   headerCell: {
     paddingInline: tokens.spacingHorizontalM,
@@ -92,7 +92,10 @@ const useStyles = makeStyles({
   cell: {
     display: 'flex',
     alignItems: 'center',
-    minWidth: 0,
+    // String, not bare `0` - a numeric `0` on `minWidth` is silently dropped by this project's
+    // makeStyles (see the griffel-gotchas memory), which would leave grid items unable to shrink
+    // below their content's min-content width and defeat the name column's ellipsis truncation.
+    minWidth: '0px',
     paddingInline: tokens.spacingHorizontalM,
     paddingBlock: tokens.spacingVerticalS,
     boxSizing: 'border-box',
@@ -115,12 +118,6 @@ const useStyles = makeStyles({
     fontSize: tokens.fontSizeBase200,
     marginTop: `calc(-1 * ${tokens.spacingVerticalXS})`,
   },
-  colorDot: {
-    width: '14px',
-    height: '14px',
-    borderRadius: tokens.borderRadiusCircular,
-    flexShrink: 0,
-  },
   projectRow: {
     backgroundColor: tokens.colorNeutralBackground2,
   },
@@ -138,13 +135,20 @@ const useStyles = makeStyles({
     textAlign: 'left',
     font: 'inherit',
     color: tokens.colorNeutralForeground1,
-    minWidth: 0,
+    // String, not bare `0` - see `.cell` above for why (Griffel silently drops a numeric 0 here).
+    minWidth: '0px',
     ':hover': {
       textDecorationLine: 'underline',
     },
   },
   contingentNameButton: {
     paddingLeft: tokens.spacingHorizontalXXL,
+  },
+  contingentLabel: {
+    minWidth: '0px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
   contingentNamePlaceholder: {
     color: tokens.colorNeutralForeground4,
@@ -156,6 +160,7 @@ const useStyles = makeStyles({
   contingentLocationIcons: {
     display: 'flex',
     alignItems: 'center',
+    flexShrink: 0,
     gap: tokens.spacingHorizontalXS,
     marginLeft: tokens.spacingHorizontalS,
   },
@@ -168,6 +173,11 @@ const useStyles = makeStyles({
   },
   spanAllColumns: {
     gridColumn: '1 / -1',
+  },
+  // `addContingentButton`'s `marginLeft: auto` pushes it flush against the name cluster once a
+  // long project name/client leaves no free space to absorb - this guarantees a minimum gap even then.
+  nameCell: {
+    gap: tokens.spacingHorizontalM,
   },
   addContingentButton: {
     marginLeft: 'auto',
@@ -366,7 +376,6 @@ export function ProjectsPage({ isDark, onSetThemeMode }: ProjectsPageProps) {
             <div className={styles.headerCell} role="columnheader" />
             <div className={styles.headerCell} role="columnheader" />
             <div className={styles.headerCell} role="columnheader" />
-            <div className={styles.headerCell} role="columnheader" />
             <div className={mergeClasses(styles.headerCell, styles.headerCellCenter)} role="columnheader">
               Kontingent
             </div>
@@ -405,16 +414,10 @@ export function ProjectsPage({ isDark, onSetThemeMode }: ProjectsPageProps) {
                     className={mergeClasses(styles.cell, styles.projectRow)}
                     role="cell"
                   >
-                    <div className={styles.colorDot} style={{ backgroundColor: project.color }} title={project.color} />
+                    <ProjectAvatar project={project} size={28} title={project.color} />
                   </div>
                   <div
-                    className={mergeClasses(styles.cell, styles.projectRow)}
-                    role="cell"
-                  >
-                    <Avatar image={project.image ? { src: project.image } : undefined} name={project.name || undefined} size={28} />
-                  </div>
-                  <div
-                    className={mergeClasses(styles.cell, styles.projectRow)}
+                    className={mergeClasses(styles.cell, styles.projectRow, styles.nameCell)}
                     role="cell"
                   >
                     <button type="button" className={styles.nameButton} onClick={() => openEditProjectDialog(project)}>
@@ -492,9 +495,8 @@ export function ProjectsPage({ isDark, onSetThemeMode }: ProjectsPageProps) {
                         const overBudget = isContingentOverBudget(entry);
                         return (
                           <Fragment key={entry.id}>
-                            {/* Leading chevron/color/avatar spacer columns never carry the row divider -
+                            {/* Leading chevron/avatar spacer columns never carry the row divider -
                                 it should start together with the Kontingent name, not at the table's left edge. */}
-                            <div className={mergeClasses(styles.cell, styles.contingentRow)} role="cell" />
                             <div className={mergeClasses(styles.cell, styles.contingentRow)} role="cell" />
                             <div className={mergeClasses(styles.cell, styles.contingentRow)} role="cell" />
                             <div className={mergeClasses(styles.cell, styles.contingentRow, styles.rowDivider)} role="cell">
@@ -505,6 +507,7 @@ export function ProjectsPage({ isDark, onSetThemeMode }: ProjectsPageProps) {
                               >
                                 <Text
                                   className={mergeClasses(
+                                    styles.contingentLabel,
                                     !entry.label && styles.contingentNamePlaceholder,
                                     overBudget && styles.contingentNameOverBudget,
                                   )}

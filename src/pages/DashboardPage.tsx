@@ -1,7 +1,8 @@
 import { useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Avatar, Spinner, Text, makeStyles, tokens } from '@fluentui/react-components';
+import { Spinner, Text, makeStyles, tokens } from '@fluentui/react-components';
 import { PageLayout } from '../components/PageLayout';
+import { ProjectAvatar } from '../components/ProjectAvatar';
 import { KpiTile } from '../components/dashboard/KpiTile';
 import { DashboardCard } from '../components/dashboard/DashboardCard';
 import { ChargeabilityChart } from '../components/dashboard/ChargeabilityChart';
@@ -123,7 +124,7 @@ function useDashboardData(
     if (!projects || !assignments) return null;
     const bookings = buildMonthlyBookings(assignments, projects, year, bundesland);
     const summaries = buildProjectYearSummaries(projects, bookings, year);
-    const locations = buildMonthlyLocations(assignments, year, bundesland);
+    const locations = buildMonthlyLocations(assignments, year);
     const hoursByLocation = buildHoursByLocation(assignments, year);
     return { projects, assignments, bookings, summaries, locations, hoursByLocation };
   }, [projects, assignments, year, bundesland]);
@@ -229,8 +230,8 @@ function DashboardContent({ year, data, settings }: DashboardContentProps) {
     [locations, monthsToInclude],
   );
 
-  // Gebuchte/prognostizierte verrechenbare Tage pro Monat (nicht kumuliert) - speist sowohl die
-  // "Verrechenbare Tage"-Kachel (Jahressumme) als auch das Verrechenbare-Tage-Chart am Ende des
+  // Gebuchte/prognostizierte abrechenbare Tage pro Monat (nicht kumuliert) - speist sowohl die
+  // "Abrechenbare Tage"-Kachel (Jahressumme) als auch das Abrechenbare-Tage-Chart am Ende des
   // Dashboards, das die Kumulierung/das Abschneiden bei monthsToInclude selbst übernimmt (wie BurnUpChart).
   const chargeableDaysByMonth = useMemo(() => bookedChargeableDaysByMonth(bookings), [bookings]);
   const chargeableForecastMonthly = useMemo(() => chargeableForecastByMonth(data.projects, year), [data.projects, year]);
@@ -254,7 +255,7 @@ function DashboardContent({ year, data, settings }: DashboardContentProps) {
     <div className={styles.content}>
       <div className={styles.kpiRow}>
         <KpiTile
-          label="Verrechenbare Tage (Jahr)"
+          label="Abrechenbare Tage (Jahr)"
           value={formatHoursDe(bookedChargeableTotal)}
           deltaText={`${bookedChargeableTotal - targetChargeableDays >= 0 ? '+' : ''}${formatHoursDe(bookedChargeableTotal - targetChargeableDays)} Tage ggü. Ziel`}
           deltaTone={bookedChargeableTotal >= targetChargeableDays ? 'positive' : 'negative'}
@@ -262,17 +263,20 @@ function DashboardContent({ year, data, settings }: DashboardContentProps) {
         <KpiTile
           label={`Ø Chargeability${yearAverageSuffix}`}
           value={chargeabilityYear === null ? '–' : `${chargeabilityYear.toFixed(1)}%`}
-          deltaText={chargeabilityYear === null ? undefined : `${chargeabilityYear - target >= 0 ? '+' : ''}${(chargeabilityYear - target).toFixed(1)} Pkt. ggü. Ziel`}
+          deltaText={chargeabilityYear === null ? undefined : `${chargeabilityYear - target >= 0 ? '+' : ''}${(chargeabilityYear - target).toFixed(1)} % ggü. Ziel`}
           deltaTone={chargeabilityYear === null ? 'neutral' : chargeabilityYear >= target ? 'positive' : 'negative'}
         />
         {locationTiles.map((tile) => {
           const value = locationPercentYear(locations, tile.key, monthsToInclude);
+          const showDelta = tile.key !== 'homeoffice';
+          const delta = value === null ? null : value - tile.target;
           return (
             <KpiTile
               key={tile.key}
               label={tile.label}
               value={value === null ? '–' : `${value.toFixed(1)}%`}
-              deltaText={value === null ? undefined : `Ziel ${tile.target}%`}
+              deltaText={showDelta && delta !== null ? `${delta >= 0 ? '+' : ''}${delta.toFixed(1)} % ggü. Ziel` : undefined}
+              deltaTone={showDelta && delta !== null ? (delta >= 0 ? 'positive' : 'negative') : undefined}
             />
           );
         })}
@@ -283,13 +287,7 @@ function DashboardContent({ year, data, settings }: DashboardContentProps) {
       </Text>
       <div className={styles.kpiRow}>
         {visibleSummaries.map((s) => {
-          const avatar = (
-            <Avatar
-              image={s.project.image ? { src: s.project.image } : undefined}
-              name={s.project.name || undefined}
-              size={20}
-            />
-          );
+          const avatar = <ProjectAvatar project={s.project} size={20} />;
           const hasContingent = s.project.hasContingent && s.budgetDays > 0;
           const remaining = s.budgetDays - s.bookedDays;
           const remainingRatio = hasContingent ? remaining / s.budgetDays : 0;
@@ -337,7 +335,7 @@ function DashboardContent({ year, data, settings }: DashboardContentProps) {
       </Text>
       <div className={styles.chartRow}>
         <DashboardCard>
-          <ChargeabilityChart values={chargeabilitySeries} target={target} />
+          <ChargeabilityChart values={chargeabilitySeries} target={target} average={chargeabilityYear} />
         </DashboardCard>
         <DashboardCard>
           <CompositionChart hoursByChargeable={bookings.hoursByChargeable} />
@@ -357,7 +355,7 @@ function DashboardContent({ year, data, settings }: DashboardContentProps) {
       </div>
 
       <Text size={400} weight="semibold" className={styles.sectionHeading}>
-        Verrechenbare Tage
+        Abrechenbare Tage
       </Text>
       <div className={styles.chartRow}>
         <DashboardCard>
