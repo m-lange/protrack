@@ -2,6 +2,18 @@
   color-scheme: light dark;
 }
 
+/* Once the app has picked an explicit mode (see useThemeMode), native chrome
+   (scrollbars, form controls, etc.) must follow it instead of the OS
+   preference - otherwise e.g. a manually-selected light mode still renders
+   dark scrollbars while the OS is in dark mode. */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
 * {
   box-sizing: border-box;
 }
