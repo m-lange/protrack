@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactElement } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Avatar,
   Button,
@@ -23,15 +23,16 @@ import {
 } from '@fluentui/react-components';
 import {
   Camera24Regular,
-  CircleLine24Regular,
   Checkmark24Regular,
   ChevronDown20Regular,
   Delete24Regular,
   Organization24Regular,
   Premium24Regular,
+  Scales24Regular,
+  type FluentIcon,
 } from '@fluentui/react-icons';
 import { suggestedProjectColors } from '../theme/palette';
-import { createEmptyProject, type Chargeable, type Project } from '../types/project';
+import { CHARGEABLE_COLORS, createEmptyProject, type Chargeable, type Project } from '../types/project';
 
 const ACCEPTED_IMAGE_TYPES = 'image/png,image/jpeg,image/svg+xml';
 
@@ -103,6 +104,18 @@ const useStyles = makeStyles({
     display: 'flex',
     gap: tokens.spacingHorizontalXS,
   },
+  // ToggleButton's `icon` slot resolves/wraps the passed element itself, so a color set on the
+  // icon element (className or inline style) never survives onto the rendered svg - targeting the
+  // svg as a descendant of the button (which does keep whatever className we pass it) works instead.
+  chargeableButtonYes: {
+    '& svg': { color: CHARGEABLE_COLORS.yes },
+  },
+  chargeableButtonNo: {
+    '& svg': { color: CHARGEABLE_COLORS.no },
+  },
+  chargeableButtonNeutral: {
+    '& svg': { color: CHARGEABLE_COLORS.neutral },
+  },
   colorTrigger: {
     display: 'flex',
     alignItems: 'center',
@@ -152,10 +165,10 @@ const useStyles = makeStyles({
   },
 });
 
-const CHARGEABLE_OPTIONS: { value: Chargeable; label: string; icon: ReactElement }[] = [
-  { value: 'yes', label: 'Ja', icon: <Premium24Regular /> },
-  { value: 'no', label: 'Nein', icon: <Organization24Regular /> },
-  { value: 'neutral', label: 'Neutral', icon: <CircleLine24Regular /> },
+const CHARGEABLE_OPTIONS: { value: Chargeable; label: string; Icon: FluentIcon }[] = [
+  { value: 'yes', label: 'Ja', Icon: Premium24Regular },
+  { value: 'no', label: 'Nein', Icon: Organization24Regular },
+  { value: 'neutral', label: 'Neutral', Icon: Scales24Regular },
 ];
 
 interface ProjectDialogProps {
@@ -271,7 +284,14 @@ export function ProjectDialog({ open, project, nextOrder, onSave, onDelete, onCl
                 {CHARGEABLE_OPTIONS.map((option) => (
                   <ToggleButton
                     key={option.value}
-                    icon={option.icon}
+                    className={
+                      option.value === 'yes'
+                        ? styles.chargeableButtonYes
+                        : option.value === 'no'
+                          ? styles.chargeableButtonNo
+                          : styles.chargeableButtonNeutral
+                    }
+                    icon={<option.Icon />}
                     checked={draft.chargeable === option.value}
                     onClick={() => setDraft((prev) => ({ ...prev, chargeable: option.value }))}
                     aria-label={option.label}

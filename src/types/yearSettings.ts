@@ -6,6 +6,8 @@ export interface YearSettings {
   targetChargeability: number;
   targetKunde: number;
   targetBuero: number;
+  /** Ziel für gebuchte verrechenbare Tage im Jahr. */
+  targetChargeableDays: number;
 }
 
 export const DEFAULT_YEAR_SETTINGS: Omit<YearSettings, 'year'> = {
@@ -13,6 +15,7 @@ export const DEFAULT_YEAR_SETTINGS: Omit<YearSettings, 'year'> = {
   targetChargeability: 80,
   targetKunde: 10,
   targetBuero: 20,
+  targetChargeableDays: 180,
 };
 
 export function homeofficeTarget(targetKunde: number, targetBuero: number): number {
@@ -31,6 +34,8 @@ export function normalizeYearSettings(raw: Record<string, unknown>, year: number
     targetChargeability: typeof raw.targetChargeability === 'number' ? raw.targetChargeability : DEFAULT_YEAR_SETTINGS.targetChargeability,
     targetKunde: typeof raw.targetKunde === 'number' ? raw.targetKunde : DEFAULT_YEAR_SETTINGS.targetKunde,
     targetBuero: typeof raw.targetBuero === 'number' ? raw.targetBuero : DEFAULT_YEAR_SETTINGS.targetBuero,
+    targetChargeableDays:
+      typeof raw.targetChargeableDays === 'number' ? raw.targetChargeableDays : DEFAULT_YEAR_SETTINGS.targetChargeableDays,
   };
 }
 

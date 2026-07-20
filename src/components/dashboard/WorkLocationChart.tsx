@@ -10,7 +10,9 @@ const MARGIN = { top: 16, right: 12, bottom: 24, left: 34 };
 const PLOT_W = VIEW_W - MARGIN.left - MARGIN.right;
 const PLOT_H = VIEW_H - MARGIN.top - MARGIN.bottom;
 const SLOT_W = PLOT_W / 12;
-const Y_MAX = 100;
+/** See the matching comment in ChargeabilityChart.tsx - the axis ceiling grows past 100 when a
+ * value/target does. */
+const Y_AXIS_STEP = 25;
 
 const SERIES: { key: ChartLocation; label: string; color: string }[] = [
   { key: 'kunde', label: WORK_LOCATION_LABELS.kunde, color: WORK_LOCATION_COLORS.kunde },
@@ -113,7 +115,11 @@ export function WorkLocationChart({ valuesByLocation, targetsByLocation }: WorkL
   const styles = useStyles();
   const [hovered, setHovered] = useState<number | null>(null);
 
-  const scaleY = (value: number) => MARGIN.top + PLOT_H - (value / Y_MAX) * PLOT_H;
+  const numericValues = SERIES.flatMap((series) => valuesByLocation[series.key].filter((value): value is number => value !== null));
+  const targetValues = SERIES.map((series) => targetsByLocation[series.key]);
+  const yMax = Math.max(100, Math.ceil(Math.max(0, ...targetValues, ...numericValues) / Y_AXIS_STEP) * Y_AXIS_STEP);
+
+  const scaleY = (value: number) => MARGIN.top + PLOT_H - (value / yMax) * PLOT_H;
   const xForMonth = (monthIndex: number) => MARGIN.left + monthIndex * SLOT_W + SLOT_W / 2;
 
   const seriesData = SERIES.map((series) => {
@@ -130,7 +136,7 @@ export function WorkLocationChart({ valuesByLocation, targetsByLocation }: WorkL
     return { ...series, values, points, linePath, target: targetsByLocation[series.key] };
   });
 
-  const ticks = [0, 25, 50, 75, 100];
+  const ticks = Array.from({ length: yMax / Y_AXIS_STEP + 1 }, (_, i) => i * Y_AXIS_STEP);
 
   return (
     <div className={styles.root}>

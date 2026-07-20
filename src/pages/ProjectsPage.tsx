@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Avatar,
@@ -12,13 +12,21 @@ import {
   tokens,
   useToastController,
 } from '@fluentui/react-components';
-import { Add24Regular, ChevronDown24Regular, ChevronUp24Regular } from '@fluentui/react-icons';
+import {
+  Add24Regular,
+  ChevronDown16Regular,
+  ChevronDown24Regular,
+  ChevronRight16Regular,
+  ChevronUp24Regular,
+} from '@fluentui/react-icons';
 import { PageLayout } from '../components/PageLayout';
 import { ProjectDialog } from '../components/ProjectDialog';
 import { ContingentDialog } from '../components/ContingentDialog';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { InlineNumberInput } from '../components/InlineNumberInput';
 import { ProjectNameCluster } from '../components/ProjectNameCluster';
+import { WorkLocationIcon } from '../components/WorkLocationIcon';
+import { useDayAssignments } from '../hooks/useDayAssignments';
 import { useProjects } from '../hooks/useProjects';
 import {
   emptyForecastMonths,
@@ -29,10 +37,13 @@ import {
   type ContingentEntry,
   type Project,
 } from '../types/project';
+import { WORK_LOCATIONS, WORK_LOCATION_LABELS } from '../types/workLocation';
 import { useManualBackup } from '../hooks/useManualBackup';
 import type { ThemeMode } from '../theme/useThemeMode';
 import { dashboardPath, defaultMonthForYear, monthPath, projectsPath, settingsPath, yearPath } from '../utils/navigation';
 import { saveLastView } from '../utils/lastView';
+import { hoursToDays } from '../utils/dashboardAggregation';
+import { formatHoursDe } from '../utils/format';
 import { MONTH_NAMES } from '../utils/calendarGrid';
 import { APP_TOASTER_ID } from '../utils/toaster';
 
@@ -60,9 +71,9 @@ const useStyles = makeStyles({
   // so no per-row layout algorithm can ever drift two rows' columns out of alignment.
   grid: {
     display: 'grid',
-    gridTemplateColumns: '40px 44px minmax(260px, 1fr) 90px repeat(12, 76px) 84px',
+    gridTemplateColumns: '32px 40px 44px minmax(260px, 1fr) 90px repeat(12, 76px) 84px',
     width: '100%',
-    minWidth: '1430px',
+    minWidth: '1462px',
   },
   headerCell: {
     paddingInline: tokens.spacingHorizontalM,
@@ -74,7 +85,6 @@ const useStyles = makeStyles({
   headerSpacerRow: {
     height: tokens.spacingVerticalL,
     paddingBlock: 0,
-    borderBottom: 'none',
   },
   headerCellCenter: {
     textAlign: 'center',
@@ -86,14 +96,24 @@ const useStyles = makeStyles({
     paddingInline: tokens.spacingHorizontalM,
     paddingBlock: tokens.spacingVerticalS,
     boxSizing: 'border-box',
-    borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
+  },
+  // Applied explicitly wherever a row divider is wanted - never a default on `.cell`, so a row's
+  // border never has to be turned off again for a case that shouldn't have one.
+  rowDivider: {
+    borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
   },
   numberCell: {
     paddingInline: tokens.spacingHorizontalXS,
     justifyContent: 'center',
   },
-  noBorder: {
-    borderBottom: 'none',
+  numberCellStack: {
+    flexDirection: 'column',
+    gap: 0,
+  },
+  bookedDays: {
+    color: `color-mix(in srgb, ${tokens.colorBrandForeground1} 70%, ${tokens.colorNeutralBackground1})`,
+    fontSize: tokens.fontSizeBase200,
+    marginTop: `calc(-1 * ${tokens.spacingVerticalXS})`,
   },
   colorDot: {
     width: '14px',
@@ -133,16 +153,36 @@ const useStyles = makeStyles({
     color: tokens.colorPaletteRedForeground2,
     fontWeight: tokens.fontWeightBold,
   },
+  contingentLocationIcons: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalXS,
+    marginLeft: tokens.spacingHorizontalS,
+  },
+  collapseButton: {
+    flexShrink: 0,
+    minWidth: 'unset',
+  },
+  collapseButtonHidden: {
+    visibility: 'hidden',
+  },
   spanAllColumns: {
     gridColumn: '1 / -1',
   },
   addContingentButton: {
     marginLeft: 'auto',
   },
-  spacerRow: {
-    height: tokens.spacingVerticalL,
+  // Split in half so the divider between two projects (added to the bottom half below) sits
+  // exactly halfway through the gap - equidistant from the avatar above and the one below,
+  // instead of hugging whichever row happens to carry the border.
+  spacerRowTop: {
+    height: `calc(${tokens.spacingVerticalL} / 2)`,
     paddingBlock: 0,
-    borderBottom: 'none',
+  },
+  spacerRowBottom: {
+    height: `calc(${tokens.spacingVerticalL} / 2)`,
+    paddingBlock: 0,
+    borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
   },
   emptyState: {
     display: 'flex',
@@ -173,14 +213,37 @@ export function ProjectsPage({ isDark, onSetThemeMode }: ProjectsPageProps) {
   const navigate = useNavigate();
   const year = Number(yearParam) || new Date().getFullYear();
   const { projects, upsertProject, removeProject, moveProject, nextOrder } = useProjects();
+  const { assignments } = useDayAssignments();
   const styles = useStyles();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingContingent, setEditingContingent] = useState<EditingContingent | null>(null);
   const [contingentDialogOpen, setContingentDialogOpen] = useState(false);
+  const [collapsedProjectIds, setCollapsedProjectIds] = useState<Set<string>>(new Set());
   const [pendingConfirm, setPendingConfirm] = useState<{ message: string; onConfirm: () => void } | null>(null);
   const onManualBackup = useManualBackup();
   const { dispatchToast } = useToastController(APP_TOASTER_ID);
+
+  /** Gebuchte Stunden pro Projekt und Monat in `year`, 12 Einträge je Projekt (Index 0 = Januar). */
+  const bookedHoursByProjectMonth = useMemo(() => {
+    const map = new Map<string, number[]>();
+    const yearPrefix = String(year);
+    for (const assignment of assignments ?? []) {
+      if (assignment.date.slice(0, 4) !== yearPrefix) continue;
+      const monthIndex = Number(assignment.date.slice(5, 7)) - 1;
+      if (monthIndex < 0 || monthIndex > 11) continue;
+      const months = map.get(assignment.projectId) ?? emptyForecastMonths();
+      months[monthIndex] += assignment.hours;
+      map.set(assignment.projectId, months);
+    }
+    return map;
+  }, [assignments, year]);
+
+  const bookedDaysForMonth = (projectId: string, monthIndex: number): number =>
+    hoursToDays(bookedHoursByProjectMonth.get(projectId)?.[monthIndex] ?? 0);
+
+  const bookedDaysForYear = (projectId: string): number =>
+    hoursToDays((bookedHoursByProjectMonth.get(projectId) ?? []).reduce((sum, hours) => sum + hours, 0));
 
   useEffect(() => {
     saveLastView(projectsPath(year));
@@ -251,6 +314,18 @@ export function ProjectsPage({ isDark, onSetThemeMode }: ProjectsPageProps) {
     void upsertProject({ ...project, contingents: project.contingents.filter((c) => c.id !== contingentId) });
   };
 
+  const toggleContingentsCollapsed = (projectId: string) => {
+    setCollapsedProjectIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(projectId)) {
+        next.delete(projectId);
+      } else {
+        next.add(projectId);
+      }
+      return next;
+    });
+  };
+
   return (
     <PageLayout
       view="projects"
@@ -291,6 +366,7 @@ export function ProjectsPage({ isDark, onSetThemeMode }: ProjectsPageProps) {
             <div className={styles.headerCell} role="columnheader" />
             <div className={styles.headerCell} role="columnheader" />
             <div className={styles.headerCell} role="columnheader" />
+            <div className={styles.headerCell} role="columnheader" />
             <div className={mergeClasses(styles.headerCell, styles.headerCellCenter)} role="columnheader">
               Kontingent
             </div>
@@ -302,168 +378,187 @@ export function ProjectsPage({ isDark, onSetThemeMode }: ProjectsPageProps) {
             <div className={styles.headerCell} role="columnheader" />
             <div className={mergeClasses(styles.cell, styles.spanAllColumns, styles.headerSpacerRow)} role="cell" />
 
-            {projects.map((project, index) => (
-              <Fragment key={project.id}>
-                <div
-                  className={mergeClasses(styles.cell, styles.projectRow, !project.hasContingent && styles.noBorder)}
-                  role="cell"
-                >
-                  <div className={styles.colorDot} style={{ backgroundColor: project.color }} title={project.color} />
-                </div>
-                <div
-                  className={mergeClasses(styles.cell, styles.projectRow, !project.hasContingent && styles.noBorder)}
-                  role="cell"
-                >
-                  <Avatar image={project.image ? { src: project.image } : undefined} name={project.name || undefined} size={28} />
-                </div>
-                <div
-                  className={mergeClasses(styles.cell, styles.projectRow, !project.hasContingent && styles.noBorder)}
-                  role="cell"
-                >
-                  <button type="button" className={styles.nameButton} onClick={() => openEditProjectDialog(project)}>
-                    <ProjectNameCluster project={project} />
-                  </button>
-                  {project.hasContingent && (
-                    <Button
-                      className={styles.addContingentButton}
-                      appearance="secondary"
-                      icon={<Add24Regular />}
-                      onClick={() => addContingent(project)}
-                      aria-label="Kontingent hinzufügen"
-                      title="Kontingent hinzufügen"
-                    />
-                  )}
-                </div>
-                <div
-                  className={mergeClasses(
-                    styles.cell,
-                    styles.numberCell,
-                    styles.projectRow,
-                    !project.hasContingent && styles.noBorder,
-                  )}
-                  role="cell"
-                >
-                  <InlineNumberInput value={totalDays(project)} readOnly unavailable={!project.hasContingent} />
-                </div>
-                {Array.from({ length: 12 }, (_, monthIndex) => (
+            {projects.map((project, index) => {
+              const canCollapseContingents = project.hasContingent && project.contingents.length > 0;
+              const contingentsCollapsed = canCollapseContingents && collapsedProjectIds.has(project.id);
+              return (
+                <Fragment key={project.id}>
                   <div
-                    key={monthIndex}
+                    className={mergeClasses(styles.cell, styles.projectRow)}
+                    role="cell"
+                  >
+                    <Button
+                      appearance="transparent"
+                      className={mergeClasses(
+                        styles.collapseButton,
+                        !canCollapseContingents && styles.collapseButtonHidden,
+                      )}
+                      icon={contingentsCollapsed ? <ChevronRight16Regular /> : <ChevronDown16Regular />}
+                      onClick={() => toggleContingentsCollapsed(project.id)}
+                      disabled={!canCollapseContingents}
+                      aria-hidden={!canCollapseContingents}
+                      aria-label={contingentsCollapsed ? 'Kontingente anzeigen' : 'Kontingente ausblenden'}
+                      title={contingentsCollapsed ? 'Kontingente anzeigen' : 'Kontingente ausblenden'}
+                    />
+                  </div>
+                  <div
+                    className={mergeClasses(styles.cell, styles.projectRow)}
+                    role="cell"
+                  >
+                    <div className={styles.colorDot} style={{ backgroundColor: project.color }} title={project.color} />
+                  </div>
+                  <div
+                    className={mergeClasses(styles.cell, styles.projectRow)}
+                    role="cell"
+                  >
+                    <Avatar image={project.image ? { src: project.image } : undefined} name={project.name || undefined} size={28} />
+                  </div>
+                  <div
+                    className={mergeClasses(styles.cell, styles.projectRow)}
+                    role="cell"
+                  >
+                    <button type="button" className={styles.nameButton} onClick={() => openEditProjectDialog(project)}>
+                      <ProjectNameCluster project={project} />
+                    </button>
+                    {project.hasContingent && (
+                      <Button
+                        className={styles.addContingentButton}
+                        appearance="secondary"
+                        icon={<Add24Regular />}
+                        onClick={() => addContingent(project)}
+                        aria-label="Kontingent hinzufügen"
+                        title="Kontingent hinzufügen"
+                      />
+                    )}
+                  </div>
+                  <div
                     className={mergeClasses(
                       styles.cell,
                       styles.numberCell,
+                      styles.numberCellStack,
                       styles.projectRow,
-                      !project.hasContingent && styles.noBorder,
                     )}
                     role="cell"
                   >
-                    <InlineNumberInput
-                      value={projectForecastMonth(project, year, monthIndex)}
-                      readOnly
-                      unavailable={!project.hasContingent}
+                    <InlineNumberInput value={totalDays(project)} readOnly unavailable={!project.hasContingent} />
+                    <Text className={styles.bookedDays}>{formatHoursDe(bookedDaysForYear(project.id))}</Text>
+                  </div>
+                  {Array.from({ length: 12 }, (_, monthIndex) => (
+                    <div
+                      key={monthIndex}
+                      className={mergeClasses(
+                        styles.cell,
+                        styles.numberCell,
+                        styles.numberCellStack,
+                        styles.projectRow,
+                      )}
+                      role="cell"
+                    >
+                      <InlineNumberInput
+                        value={projectForecastMonth(project, year, monthIndex)}
+                        readOnly
+                        unavailable={!project.hasContingent}
+                      />
+                      <Text className={styles.bookedDays}>{formatHoursDe(bookedDaysForMonth(project.id, monthIndex))}</Text>
+                    </div>
+                  ))}
+                  <div
+                    className={mergeClasses(styles.cell, styles.projectRow)}
+                    role="cell"
+                  >
+                    <Button
+                      appearance="subtle"
+                      icon={<ChevronUp24Regular />}
+                      onClick={() => handleMove(project.id, 'up')}
+                      disabled={index === 0}
+                      aria-label="Nach oben"
+                      title="Nach oben"
+                    />
+                    <Button
+                      appearance="subtle"
+                      icon={<ChevronDown24Regular />}
+                      onClick={() => handleMove(project.id, 'down')}
+                      disabled={index === projects.length - 1}
+                      aria-label="Nach unten"
+                      title="Nach unten"
                     />
                   </div>
-                ))}
-                <div
-                  className={mergeClasses(styles.cell, styles.projectRow, !project.hasContingent && styles.noBorder)}
-                  role="cell"
-                >
-                  <Button
-                    appearance="subtle"
-                    icon={<ChevronUp24Regular />}
-                    onClick={() => handleMove(project.id, 'up')}
-                    disabled={index === 0}
-                    aria-label="Nach oben"
-                    title="Nach oben"
-                  />
-                  <Button
-                    appearance="subtle"
-                    icon={<ChevronDown24Regular />}
-                    onClick={() => handleMove(project.id, 'down')}
-                    disabled={index === projects.length - 1}
-                    aria-label="Nach unten"
-                    title="Nach unten"
-                  />
-                </div>
 
-                {project.hasContingent &&
-                  (() => {
-                    const sortedEntries = sortContingentsByPeriod(project.contingents);
-                    return sortedEntries.map((entry, entryIndex) => {
-                      const overBudget = isContingentOverBudget(entry);
-                      const isLastRow = entryIndex === sortedEntries.length - 1;
-                      return (
-                        <Fragment key={entry.id}>
-                          <div
-                            className={mergeClasses(styles.cell, styles.contingentRow, isLastRow && styles.noBorder)}
-                            role="cell"
-                          />
-                          <div
-                            className={mergeClasses(styles.cell, styles.contingentRow, isLastRow && styles.noBorder)}
-                            role="cell"
-                          />
-                          <div
-                            className={mergeClasses(styles.cell, styles.contingentRow, isLastRow && styles.noBorder)}
-                            role="cell"
-                          >
-                            <button
-                              type="button"
-                              className={mergeClasses(styles.nameButton, styles.contingentNameButton)}
-                              onClick={() => openContingentDialog(project, entry)}
-                            >
-                              <Text
-                                className={mergeClasses(
-                                  !entry.label && styles.contingentNamePlaceholder,
-                                  overBudget && styles.contingentNameOverBudget,
-                                )}
+                  {project.hasContingent &&
+                    !contingentsCollapsed &&
+                    (() => {
+                      const sortedEntries = sortContingentsByPeriod(project.contingents);
+                      return sortedEntries.map((entry) => {
+                        const overBudget = isContingentOverBudget(entry);
+                        return (
+                          <Fragment key={entry.id}>
+                            {/* Leading chevron/color/avatar spacer columns never carry the row divider -
+                                it should start together with the Kontingent name, not at the table's left edge. */}
+                            <div className={mergeClasses(styles.cell, styles.contingentRow)} role="cell" />
+                            <div className={mergeClasses(styles.cell, styles.contingentRow)} role="cell" />
+                            <div className={mergeClasses(styles.cell, styles.contingentRow)} role="cell" />
+                            <div className={mergeClasses(styles.cell, styles.contingentRow, styles.rowDivider)} role="cell">
+                              <button
+                                type="button"
+                                className={mergeClasses(styles.nameButton, styles.contingentNameButton)}
+                                onClick={() => openContingentDialog(project, entry)}
                               >
-                                {entry.label || 'Bezeichnung'}
-                              </Text>
-                            </button>
-                          </div>
-                          <div
-                            className={mergeClasses(
-                              styles.cell,
-                              styles.numberCell,
-                              styles.contingentRow,
-                              isLastRow && styles.noBorder,
-                            )}
-                            role="cell"
-                          >
-                            <InlineNumberInput value={entry.days} readOnly highlight={overBudget} />
-                          </div>
-                          {Array.from({ length: 12 }, (_, monthIndex) => (
+                                <Text
+                                  className={mergeClasses(
+                                    !entry.label && styles.contingentNamePlaceholder,
+                                    overBudget && styles.contingentNameOverBudget,
+                                  )}
+                                >
+                                  {entry.label || 'Bezeichnung'}
+                                </Text>
+                                {entry.workLocations.length > 0 && (
+                                  <span className={styles.contingentLocationIcons}>
+                                    {WORK_LOCATIONS.filter((loc) => entry.workLocations.includes(loc)).map((loc) => (
+                                      <span key={loc} title={WORK_LOCATION_LABELS[loc]}>
+                                        <WorkLocationIcon value={loc} />
+                                      </span>
+                                    ))}
+                                  </span>
+                                )}
+                              </button>
+                            </div>
                             <div
-                              key={monthIndex}
-                              className={mergeClasses(
-                                styles.cell,
-                                styles.numberCell,
-                                styles.contingentRow,
-                                isLastRow && styles.noBorder,
-                              )}
+                              className={mergeClasses(styles.cell, styles.numberCell, styles.contingentRow, styles.rowDivider)}
                               role="cell"
                             >
-                              <InlineNumberInput
-                                value={entry.forecastByYear[year]?.[monthIndex] ?? 0}
-                                highlight={overBudget}
-                                disabled={!isMonthInPeriod(entry, year, monthIndex)}
-                                onCommit={(value) => commitContingentForecastMonth(project, entry.id, monthIndex, value)}
-                              />
+                              <InlineNumberInput value={entry.days} readOnly highlight={overBudget} />
                             </div>
-                          ))}
-                          <div
-                            className={mergeClasses(styles.cell, styles.contingentRow, isLastRow && styles.noBorder)}
-                            role="cell"
-                          />
-                        </Fragment>
-                      );
-                    });
-                  })()}
+                            {Array.from({ length: 12 }, (_, monthIndex) => (
+                              <div
+                                key={monthIndex}
+                                className={mergeClasses(styles.cell, styles.numberCell, styles.contingentRow, styles.rowDivider)}
+                                role="cell"
+                              >
+                                <InlineNumberInput
+                                  value={entry.forecastByYear[year]?.[monthIndex] ?? 0}
+                                  highlight={overBudget}
+                                  disabled={!isMonthInPeriod(entry, year, monthIndex)}
+                                  onCommit={(value) =>
+                                    commitContingentForecastMonth(project, entry.id, monthIndex, value)
+                                  }
+                                />
+                              </div>
+                            ))}
+                            <div className={mergeClasses(styles.cell, styles.contingentRow, styles.rowDivider)} role="cell" />
+                          </Fragment>
+                        );
+                      });
+                    })()}
 
-                {index < projects.length - 1 && (
-                  <div className={mergeClasses(styles.cell, styles.spanAllColumns, styles.spacerRow)} role="cell" />
-                )}
-              </Fragment>
-            ))}
+                  {index < projects.length - 1 && (
+                    <>
+                      <div className={mergeClasses(styles.cell, styles.spanAllColumns, styles.spacerRowTop)} role="cell" />
+                      <div className={mergeClasses(styles.cell, styles.spanAllColumns, styles.spacerRowBottom)} role="cell" />
+                    </>
+                  )}
+                </Fragment>
+              );
+            })}
           </div>
         </div>
       )}

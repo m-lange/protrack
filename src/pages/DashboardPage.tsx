@@ -5,6 +5,7 @@ import { PageLayout } from '../components/PageLayout';
 import { KpiTile } from '../components/dashboard/KpiTile';
 import { DashboardCard } from '../components/dashboard/DashboardCard';
 import { ChargeabilityChart } from '../components/dashboard/ChargeabilityChart';
+import { ChargeableDaysChart } from '../components/dashboard/ChargeableDaysChart';
 import { CompositionChart } from '../components/dashboard/CompositionChart';
 import { LocationCompositionChart } from '../components/dashboard/LocationCompositionChart';
 import { WorkLocationChart } from '../components/dashboard/WorkLocationChart';
@@ -16,10 +17,11 @@ import { useManualBackup } from '../hooks/useManualBackup';
 import type { Project } from '../types/project';
 import { budgetByMonthForYear, isProjectRelevantForYear, projectForecastMonth } from '../types/project';
 import type { DayAssignment } from '../types/dayAssignment';
-import type { ChartLocation, WorkLocation } from '../types/workLocation';
+import type { WorkLocation } from '../types/workLocation';
 import type { Bundesland } from '../types/bundesland';
 import { homeofficeTarget, type YearSettings } from '../types/yearSettings';
 import {
+  bookedChargeableDaysByMonth,
   bookedDaysForProjectMonth,
   buildHoursByLocation,
   buildMonthlyBookings,
@@ -27,6 +29,7 @@ import {
   buildProjectYearSummaries,
   chargeabilityPercent,
   chargeabilityPercentYear,
+  chargeableForecastByMonth,
   locationPercent,
   locationPercentYear,
   type MonthlyBookings,
@@ -107,7 +110,7 @@ interface DashboardData {
   bookings: MonthlyBookings;
   summaries: ProjectYearSummary[];
   locations: MonthlyLocations;
-  hoursByLocation: Record<ChartLocation, number[]>;
+  hoursByLocation: Record<WorkLocation, number[]>;
 }
 
 function useDashboardData(
@@ -226,8 +229,14 @@ function DashboardContent({ year, data, settings }: DashboardContentProps) {
     [locations, monthsToInclude],
   );
 
-  const bookedTotal = summaries.reduce((sum, s) => sum + s.bookedDays, 0);
-  const forecastTotal = summaries.reduce((sum, s) => sum + s.forecastDays, 0);
+  // Gebuchte/prognostizierte verrechenbare Tage pro Monat (nicht kumuliert) - speist sowohl die
+  // "Verrechenbare Tage"-Kachel (Jahressumme) als auch das Verrechenbare-Tage-Chart am Ende des
+  // Dashboards, das die Kumulierung/das Abschneiden bei monthsToInclude selbst übernimmt (wie BurnUpChart).
+  const chargeableDaysByMonth = useMemo(() => bookedChargeableDaysByMonth(bookings), [bookings]);
+  const chargeableForecastMonthly = useMemo(() => chargeableForecastByMonth(data.projects, year), [data.projects, year]);
+
+  const bookedChargeableTotal = chargeableDaysByMonth.reduce((sum, days) => sum + days, 0);
+  const targetChargeableDays = settings.targetChargeableDays;
   const chargeabilityYear = chargeabilityPercentYear(bookings, monthsToInclude);
   // Dashboard project tiles/burn charts only list projects without a fixed Kontingent, or ones
   // whose Kontingent period actually overlaps the selected year - an old contract from a past
@@ -245,9 +254,10 @@ function DashboardContent({ year, data, settings }: DashboardContentProps) {
     <div className={styles.content}>
       <div className={styles.kpiRow}>
         <KpiTile
-          label="Gebuchte Tage (Jahr)"
-          value={formatHoursDe(bookedTotal)}
-          deltaText={`${bookedTotal - forecastTotal >= 0 ? '+' : ''}${formatHoursDe(bookedTotal - forecastTotal)} ggü. Forecast`}
+          label="Verrechenbare Tage (Jahr)"
+          value={formatHoursDe(bookedChargeableTotal)}
+          deltaText={`${bookedChargeableTotal - targetChargeableDays >= 0 ? '+' : ''}${formatHoursDe(bookedChargeableTotal - targetChargeableDays)} Tage ggü. Ziel`}
+          deltaTone={bookedChargeableTotal >= targetChargeableDays ? 'positive' : 'negative'}
         />
         <KpiTile
           label={`Ø Chargeability${yearAverageSuffix}`}
@@ -343,6 +353,20 @@ function DashboardContent({ year, data, settings }: DashboardContentProps) {
         </DashboardCard>
         <DashboardCard>
           <LocationCompositionChart hoursByLocation={hoursByLocation} />
+        </DashboardCard>
+      </div>
+
+      <Text size={400} weight="semibold" className={styles.sectionHeading}>
+        Verrechenbare Tage
+      </Text>
+      <div className={styles.chartRow}>
+        <DashboardCard>
+          <ChargeableDaysChart
+            bookedByMonth={chargeableDaysByMonth}
+            forecastByMonth={chargeableForecastMonthly}
+            target={targetChargeableDays}
+            monthsToInclude={monthsToInclude}
+          />
         </DashboardCard>
       </div>
     </div>

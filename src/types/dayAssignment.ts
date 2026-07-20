@@ -41,21 +41,28 @@ export function eligibleProjectsForDay(projects: Project[], date: string): Proje
   );
 }
 
-/** The contingent entry (if any) whose Von/Bis period covers `date`, i.e. the one governing a booking made on that day. */
-export function contingentEntryForDate(project: Project, date: string): ContingentEntry | undefined {
-  return project.contingents.find((entry) => isDayInPeriod(entry.periodStart, entry.periodEnd, date));
+/** The contingent entries (if any) whose Von/Bis period covers `date`, i.e. those governing a booking made on that day. */
+export function contingentEntriesForDate(project: Project, date: string): ContingentEntry[] {
+  return project.contingents.filter((entry) => isDayInPeriod(entry.periodStart, entry.periodEnd, date));
 }
 
 /**
- * Arbeitsorte, die für eine Buchung dieses Projekts an `date` wählbar sind: die Vorgabe des
- * greifenden Kontingents, falls eine gesetzt ist, sonst alle (keine Einschränkung). Immer in der
- * kanonischen `WORK_LOCATIONS`-Reihenfolge, unabhängig davon, in welcher Reihenfolge die Vorgabe
- * ursprünglich angeklickt/gespeichert wurde.
+ * Arbeitsorte, die für eine Buchung dieses Projekts an `date` wählbar sind: die Vereinigung der
+ * Vorgaben aller an diesem Tag greifenden Kontingente (eine Buchung ist keinem bestimmten
+ * Kontingent-Eintrag zugeordnet, überlappen sich also z.B. ein Vor-Ort- und ein Homeoffice-Kontingent
+ * für denselben Zeitraum, müssen beide Vorgaben wählbar sein). Hat keines der greifenden Kontingente
+ * eine Vorgabe gesetzt (oder greift keines), gilt keine Einschränkung. Immer in der kanonischen
+ * `WORK_LOCATIONS`-Reihenfolge, unabhängig davon, in welcher Reihenfolge die Vorgaben ursprünglich
+ * angeklickt/gespeichert wurden.
  */
 export function allowedWorkLocationsForBooking(project: Project, date: string): WorkLocation[] {
-  const entry = contingentEntryForDate(project, date);
-  if (!entry || entry.workLocations.length === 0) return WORK_LOCATIONS;
-  return WORK_LOCATIONS.filter((loc) => entry.workLocations.includes(loc));
+  const entries = contingentEntriesForDate(project, date);
+  if (entries.length === 0 || entries.some((entry) => entry.workLocations.length === 0)) return WORK_LOCATIONS;
+  const union = new Set<WorkLocation>();
+  for (const entry of entries) {
+    for (const loc of entry.workLocations) union.add(loc);
+  }
+  return WORK_LOCATIONS.filter((loc) => union.has(loc));
 }
 
 /** The first explicitly set Arbeitsort among a day's bookings, used as the day's "established" location when deciding whether a newly added project conflicts with what's already booked that day. */

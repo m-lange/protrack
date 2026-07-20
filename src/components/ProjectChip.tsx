@@ -17,6 +17,8 @@ const useStyles = makeStyles({
   },
   avatar: {
     flexShrink: 0,
+    border: '1px solid transparent',
+    borderRadius: tokens.borderRadiusCircular,
   },
   label: {
     flex: 1,
@@ -47,6 +49,7 @@ export function ProjectChip({ project, avatarSize = 16, className, children, ...
     <div className={mergeClasses(styles.chip, className)} style={{ backgroundColor: project.color, color: textColor }} {...handlers}>
       <Avatar
         className={styles.avatar}
+        style={{ borderColor: textColor }}
         image={project.image ? { src: project.image } : undefined}
         name={project.name || undefined}
         size={avatarSize}

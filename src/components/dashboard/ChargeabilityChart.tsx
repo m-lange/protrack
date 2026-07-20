@@ -9,7 +9,10 @@ const MARGIN = { top: 16, right: 12, bottom: 24, left: 34 };
 const PLOT_W = VIEW_W - MARGIN.left - MARGIN.right;
 const PLOT_H = VIEW_H - MARGIN.top - MARGIN.bottom;
 const SLOT_W = PLOT_W / 12;
-const Y_MAX = 100;
+/** Percentage axis step (25/50/75/100…) - the ceiling grows past 100 when a value/target does, since
+ * booking more than 8h on a working day (or being "abwesend" less than the deducted allowance) can
+ * push chargeability/Arbeitsort-% above 100% - see dashboardAggregation.ts's `computeAvailableHoursByMonth`. */
+const Y_AXIS_STEP = 25;
 
 const useStyles = makeStyles({
   // Fixed width (matching VIEW_W 1:1, not `width: '100%'`) so every dashboard chart/table has a
@@ -121,7 +124,10 @@ export function ChargeabilityChart({ values, target }: ChargeabilityChartProps) 
   const styles = useStyles();
   const [hovered, setHovered] = useState<number | null>(null);
 
-  const scaleY = (value: number) => MARGIN.top + PLOT_H - (value / Y_MAX) * PLOT_H;
+  const numericValues = values.filter((value): value is number => value !== null);
+  const yMax = Math.max(100, Math.ceil(Math.max(0, target, ...numericValues) / Y_AXIS_STEP) * Y_AXIS_STEP);
+
+  const scaleY = (value: number) => MARGIN.top + PLOT_H - (value / yMax) * PLOT_H;
   const xForMonth = (monthIndex: number) => MARGIN.left + monthIndex * SLOT_W + SLOT_W / 2;
 
   const points = values.map((value, monthIndex) => (value === null ? null : { x: xForMonth(monthIndex), y: scaleY(value) }));
@@ -152,15 +158,15 @@ export function ChargeabilityChart({ values, target }: ChargeabilityChartProps) 
     }
   });
 
-  const targetY = scaleY(Math.max(0, Math.min(100, target)));
-  const ticks = [0, 25, 50, 75, 100];
+  const targetY = scaleY(Math.max(0, target));
+  const ticks = Array.from({ length: yMax / Y_AXIS_STEP + 1 }, (_, i) => i * Y_AXIS_STEP);
 
   return (
     <div className={styles.root}>
       <div className={styles.titleRow}>
         <Text weight="semibold">Chargeability</Text>
         <Text size={200} className={styles.targetHint}>
-          Ziel {target}% · verrechenbare Tage ÷ Arbeitstage (Mo–Fr, ohne Feiertage)
+          Ziel {target}% · verrechenbare Tage. ÷ verfügbare Tage
         </Text>
       </div>
       <div className={styles.svgWrap}>

@@ -12,7 +12,7 @@ import {
 import { roundedTopRectPath } from '../../utils/chartPaths';
 import { hoursToDays } from '../../utils/dashboardAggregation';
 import { formatHoursDe } from '../../utils/format';
-import { WORK_LOCATION_COLORS, WORK_LOCATION_LABELS, type ChartLocation } from '../../types/workLocation';
+import { WORK_LOCATION_COLORS, WORK_LOCATION_LABELS, type WorkLocation } from '../../types/workLocation';
 
 const VIEW_W = CHART_VIEW_WIDTH;
 const VIEW_H = 220;
@@ -24,10 +24,11 @@ const SLOT_W = PLOT_W / 12;
 const BAR_W = Math.min(SLOT_W * 0.5, 24);
 const SEGMENT_GAP = 2;
 
-const SEGMENTS: { key: ChartLocation; label: string; color: string }[] = [
+const SEGMENTS: { key: WorkLocation; label: string; color: string }[] = [
   { key: 'kunde', label: WORK_LOCATION_LABELS.kunde, color: WORK_LOCATION_COLORS.kunde },
   { key: 'buero', label: WORK_LOCATION_LABELS.buero, color: WORK_LOCATION_COLORS.buero },
   { key: 'homeoffice', label: WORK_LOCATION_LABELS.homeoffice, color: WORK_LOCATION_COLORS.homeoffice },
+  { key: 'abwesend', label: WORK_LOCATION_LABELS.abwesend, color: WORK_LOCATION_COLORS.abwesend },
 ];
 
 const useStyles = makeStyles({
@@ -113,7 +114,7 @@ const useStyles = makeStyles({
 });
 
 interface LocationCompositionChartProps {
-  hoursByLocation: Record<ChartLocation, number[]>;
+  hoursByLocation: Record<WorkLocation, number[]>;
 }
 
 /** Stacked bar chart: booked hours per month, split by Arbeitsort (Kunde/Büro/Home Office) - analog zu CompositionChart. */
@@ -125,7 +126,7 @@ export function LocationCompositionChart({ hoursByLocation }: LocationCompositio
 
   const totals = Array.from(
     { length: 12 },
-    (_, m) => hoursByLocation.kunde[m] + hoursByLocation.buero[m] + hoursByLocation.homeoffice[m],
+    (_, m) => hoursByLocation.kunde[m] + hoursByLocation.buero[m] + hoursByLocation.homeoffice[m] + hoursByLocation.abwesend[m],
   );
   const yMax = niceMax(Math.max(1, ...totals));
   const yTicks = ticksFor(yMax, 4);

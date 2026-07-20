@@ -1,7 +1,15 @@
+import { tokens } from '@fluentui/react-components';
 import { lightPalette } from '../theme/palette';
 import { WORK_LOCATIONS, type WorkLocation } from './workLocation';
 
 export type Chargeable = 'yes' | 'no' | 'neutral';
+
+/** Bold/saturated per-state colors so Ja/Nein/Neutral stay clearly distinguishable wherever a project's Chargeable is shown. */
+export const CHARGEABLE_COLORS: Record<Chargeable, string> = {
+  yes: tokens.colorPaletteGreenForeground3,
+  no: tokens.colorPaletteBerryForeground3,
+  neutral: tokens.colorNeutralForeground2,
+};
 
 export interface ContingentEntry {
   id: string;
