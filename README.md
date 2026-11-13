@@ -1,16 +1,11 @@
 # ProTrack
 
-Project and time tracking for a consultant: accounts, projects and orders budgeted in
-person-days, a monthly forecast, a timesheet and a year calendar. There is no backend: the
-data stays in the browser, with an optional JSON backup file.
+Privacy-first project and time tracking for consultants. Manage accounts, person-day budgets, monthly forecasts, timesheets, and a year calendar—100% in your browser with no backend and portable JSON backups.
 
-**[Open ProTrack](https://m-lange.github.io/protrack/)**
+
+**[👉 Try it live in your browser →](https://m-lange.github.io/protrack/)**
+
+<br/>
 
 ![ProTrack with sample data](docs/screenshot.png)
 
-## Development
-
-```
-npm ci
-npm start
-```
