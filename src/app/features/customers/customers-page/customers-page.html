@@ -1,0 +1,11 @@
+<div class="pt-page-head">
+  <h1 class="pt-page-title">{{ t.nav.customers }}</h1>
+  <div class="pt-page-head__actions">
+    <a class="pt-btn pt-btn--primary" routerLink="/customers/new">
+      <app-icon name="plus" />{{ t.customers.newCustomer }}
+    </a>
+  </div>
+</div>
+
+<!-- The table straight on the page, without a card around it (user, 2026-11-07). -->
+<app-customer-list editable />

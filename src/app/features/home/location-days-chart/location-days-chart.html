@@ -1,0 +1,50 @@
+<section class="pt-card" aria-labelledby="location-days-title">
+  <div class="pt-card__head">
+    <h2 class="pt-card__title" id="location-days-title">{{ t.home.daysChart.title }}</h2>
+  </div>
+  <div class="chart">
+    <div class="chart__plot">
+      <div class="pt-bars" role="list" [attr.aria-label]="t.home.daysChart.label(year())">
+        @for (bar of bars(); track bar.label) {
+          <div
+            class="pt-bar"
+            role="listitem"
+            [attr.title]="bar.title"
+            [attr.aria-label]="bar.title"
+          >
+            <span class="pt-bar__label" aria-hidden="true">{{ bar.value }}</span>
+            @if (bar.segments.length) {
+              <span class="pt-stack" [style.--h.px]="bar.height">
+                @for (segment of bar.segments; track segment.location) {
+                  <span
+                    class="pt-stack__seg"
+                    [style.--share.%]="segment.share"
+                    [style.--swatch-color]="segment.color"
+                  ></span>
+                }
+              </span>
+            }
+          </div>
+        }
+        <!-- The year's column of the other charts stays empty, so the months line up. -->
+        <div class="pt-bar" aria-hidden="true"></div>
+      </div>
+      <div class="pt-axis" aria-hidden="true">
+        @for (bar of bars(); track bar.label) {
+          <span>{{ bar.label }}</span>
+        }
+        <span></span>
+      </div>
+      <div class="pt-legend legend">
+        @for (item of legend; track item.name) {
+          <span class="pt-legend__item">
+            <span class="pt-legend__swatch" [style.--swatch-color]="item.color"></span>
+            {{ item.name }}
+          </span>
+        }
+      </div>
+    </div>
+    <!-- The label column of the other charts stays empty: this chart has no targets. -->
+    <div class="chart__targets" aria-hidden="true"></div>
+  </div>
+</section>

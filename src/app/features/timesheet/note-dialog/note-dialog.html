@@ -1,0 +1,66 @@
+<dialog #dialog class="dialog" aria-labelledby="note-dialog-title">
+  <div class="pt-card pt-card--form frame">
+    <div class="head">
+      <h2 class="pt-card__title" id="note-dialog-title">{{ t.timesheet.noteTitle(label()) }}</h2>
+      <button
+        type="button"
+        class="pt-icon-btn"
+        [attr.aria-label]="t.common.close"
+        (click)="cancel()"
+      >
+        <app-icon name="close" [size]="20" />
+      </button>
+    </div>
+
+    @if (editing()) {
+      <textarea
+        #field
+        class="pt-input box text"
+        rows="8"
+        spellcheck="true"
+        [value]="draft()"
+        [attr.aria-label]="t.timesheet.noteLabel(label())"
+        (blur)="render(field)"
+        (keydown)="keys($event)"
+      ></textarea>
+    } @else {
+      <!-- The note rendered from Markdown; a click (or Enter) opens its text. -->
+      <div
+        class="box rendered"
+        [class.readonly]="readOnly()"
+        [attr.tabindex]="readOnly() ? null : 0"
+        [attr.role]="readOnly() ? null : 'button'"
+        [attr.aria-label]="readOnly() ? null : t.timesheet.editNote(label())"
+        (click)="edit()"
+        (keydown.enter)="edit()"
+      >
+        @if (draft().trim()) {
+          <div class="pt-markdown" [innerHTML]="html()"></div>
+        } @else {
+          <p class="empty">{{ readOnly() ? t.timesheet.noNote : t.timesheet.writeNote }}</p>
+        }
+      </div>
+    }
+    <!-- No hint while writing (user, 2026-11-10); a locked month says why it can't be changed. -->
+    @if (readOnly()) {
+      <p class="pt-hint">{{ t.timesheet.lockedCell }}</p>
+    }
+
+    <div class="actions">
+      @if (!readOnly()) {
+        <button type="button" class="pt-btn pt-btn--secondary" (click)="cancel()">
+          {{ t.common.cancel }}
+        </button>
+      }
+      <!-- mousedown keeps the focus in the text, so OK saves what is typed. -->
+      <button
+        type="button"
+        class="pt-btn pt-btn--primary"
+        (mousedown)="$event.preventDefault()"
+        (click)="ok()"
+      >
+        {{ t.common.ok }}
+      </button>
+    </div>
+  </div>
+</dialog>

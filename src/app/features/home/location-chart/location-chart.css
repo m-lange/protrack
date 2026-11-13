@@ -1,0 +1,5 @@
+/* The grid and the target labels: ../chart-grid.css, shared with the other charts of Home. */
+:host {
+  display: block;
+  --plot-h: 200px;
+}

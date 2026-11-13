@@ -1,0 +1,154 @@
+:host {
+  display: block;
+  --plot-h: 200px;
+}
+
+/* Percent ticks | plot, the month labels under the plot. */
+.trend {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  column-gap: var(--space-8);
+  margin-block: var(--space-24) var(--space-12);
+}
+
+.ticks {
+  position: relative;
+  height: var(--plot-h);
+  color: var(--muted);
+}
+
+.tick {
+  position: absolute;
+  right: 0;
+  transform: translateY(50%);
+  white-space: nowrap;
+}
+
+.plot {
+  position: relative;
+  height: var(--plot-h);
+  border-bottom: 1px solid var(--border-input);
+  outline: none;
+}
+
+.plot:focus-visible {
+  box-shadow: var(--focus-halo);
+}
+
+/* The lines stretch with the plot; their strokes stay 2px (non-scaling). */
+.lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.lines polyline {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* A point: a single month between gaps, or the hovered month; a 2px ring of the surface. */
+.dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dot-color);
+  box-shadow: 0 0 0 2px var(--surface);
+  transform: translate(-50%, 50%);
+  pointer-events: none;
+}
+
+.dot--hover {
+  z-index: 1;
+}
+
+.crosshair {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid var(--border-input);
+  pointer-events: none;
+}
+
+.target__value {
+  color: var(--ink);
+}
+
+/* The month's values beside the crosshair, to its left in the right part of the plot. */
+.tip {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-8);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  white-space: nowrap;
+  transform: translateX(var(--space-8));
+  pointer-events: none;
+}
+
+.tip--left {
+  transform: translateX(calc(-100% - var(--space-8)));
+}
+
+.tip__row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.tip__row strong {
+  color: var(--ink);
+}
+
+/* The columns that catch the pointer, one per month. */
+.hits {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--months), minmax(0, 1fr));
+}
+
+.axis {
+  grid-column: 2;
+  position: relative;
+  height: var(--space-20);
+  margin-top: var(--space-6);
+  color: var(--muted);
+}
+
+.axis__label {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.axis__year {
+  color: var(--text-secondary);
+}
+
+/* The legend sits centered below the plot, like the other charts of Home. */
+.legend {
+  justify-content: center;
+  margin-top: var(--space-8);
+}
+
+/* Read by screen readers only. */
+.hidden-table {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

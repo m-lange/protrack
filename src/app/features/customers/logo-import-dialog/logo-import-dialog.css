@@ -1,0 +1,59 @@
+:host {
+  display: contents;
+}
+
+/* A modal card: the native dialog only places it and dims the page behind it. */
+.dialog {
+  width: min(520px, calc(100vw - 2 * var(--space-16)));
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-12);
+  background: transparent;
+}
+
+.dialog::backdrop {
+  background: color-mix(in srgb, var(--ink) 40%, transparent);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+.lookup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-8);
+}
+
+.website {
+  flex: 1;
+  min-width: 200px;
+}
+
+.preview {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-8);
+}
+
+.preview-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.size {
+  color: var(--ink);
+  font-weight: 700;
+}

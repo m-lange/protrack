@@ -1,0 +1,75 @@
+<div class="pt-page-head">
+  <h1 class="pt-page-title">{{ t.home.title }}</h1>
+</div>
+
+@let k = kpis();
+<div class="pt-kpis">
+  <div
+    class="pt-kpi"
+    [attr.title]="t.home.bookedTitle"
+    [attr.data-target]="status(k.booked?.share)"
+  >
+    <div class="pt-kpi__label">{{ t.home.booked(year()) }}</div>
+    <div class="pt-kpi__value">{{ days(k.booked?.days) }}</div>
+  </div>
+  <div
+    class="pt-kpi"
+    [attr.title]="forecastTooltip()"
+    [attr.data-target]="status(k.forecast?.share)"
+  >
+    <div class="pt-kpi__label">{{ t.home.forecast }}</div>
+    <div class="pt-kpi__value">{{ days(k.forecast?.total) }}</div>
+  </div>
+  <div
+    class="pt-kpi"
+    [attr.title]="t.home.projectionTitle"
+    [attr.data-target]="status(k.projection?.share)"
+  >
+    <div class="pt-kpi__label">{{ t.home.projection }}</div>
+    <div class="pt-kpi__value">{{ days(roundDays(k.projection?.total)) }}</div>
+  </div>
+  <div
+    class="pt-kpi"
+    [attr.title]="chargeabilityTooltip()"
+    [attr.data-target]="status(k.chargeability?.share)"
+  >
+    <div class="pt-kpi__label">{{ t.home.chargeability }}</div>
+    <div class="pt-kpi__value">{{ percent(k.chargeability?.share) }}</div>
+  </div>
+</div>
+
+@if (hasProjects()) {
+  <app-chargeability-chart
+    [year]="year()"
+    [data]="chargeabilityByMonth()"
+    [target]="settings().chargeabilityTarget"
+  />
+  <app-location-chart [year]="year()" [data]="locations()" [targets]="settings().locationTargets" />
+  <app-location-days-chart [year]="year()" [data]="locations()" />
+  <app-budget-overview [rows]="budgets()" />
+  <!-- Over all years, up to the end of last month; side by side (user, 2026-11-11). -->
+  @if (trends(); as history) {
+    <div class="trends">
+      <app-trend-chart
+        chartId="charge-trend"
+        [title]="t.home.trends.chargeTitle"
+        [months]="history.months"
+        [series]="chargeTrend()"
+        [target]="settings().chargeabilityTarget"
+      />
+      <app-trend-chart
+        chartId="location-trend"
+        [title]="t.home.trends.locationTitle"
+        [months]="history.months"
+        [series]="locationTrend()"
+      />
+    </div>
+  }
+} @else {
+  <section class="pt-card" aria-labelledby="home-start">
+    <div class="pt-card__head">
+      <h2 class="pt-card__title" id="home-start">{{ t.home.startTitle }}</h2>
+    </div>
+    <p class="pt-hint start-hint">{{ t.home.startHint }}</p>
+  </section>
+}

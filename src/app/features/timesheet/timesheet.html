@@ -1,0 +1,302 @@
+<div class="pt-page-head">
+  <h1 class="pt-page-title">{{ t.timesheet.title }}</h1>
+  <div class="pt-page-head__actions">
+    @let adjacent = adjacentMonths();
+    <div class="pt-stepper months">
+      <a
+        class="pt-stepper__btn"
+        [routerLink]="adjacent.previous.link"
+        [attr.aria-label]="t.timesheet.previousMonth(adjacent.previous.name)"
+        [attr.title]="t.timesheet.previousMonth(adjacent.previous.name)"
+      >
+        <app-icon name="chevron-left" [size]="16" />
+      </a>
+      <span class="pt-stepper__value month-name" aria-live="polite">{{ ref().name }}</span>
+      <a
+        class="pt-stepper__btn"
+        [routerLink]="adjacent.next.link"
+        [attr.aria-label]="t.timesheet.nextMonth(adjacent.next.name)"
+        [attr.title]="t.timesheet.nextMonth(adjacent.next.name)"
+      >
+        <app-icon name="chevron-right" [size]="16" />
+      </a>
+    </div>
+    <!-- Back to today's month, like This year beside the year in the top bar. -->
+    <button
+      type="button"
+      class="pt-btn pt-btn--link this-month"
+      [disabled]="isCurrentMonth()"
+      (click)="showThisMonth()"
+    >
+      {{ t.timesheet.thisMonth }}
+    </button>
+    <!-- Locks the shown month against changes; pressed again, it unlocks it. -->
+    <button
+      type="button"
+      class="pt-btn pt-btn--secondary lock"
+      [attr.aria-pressed]="locked()"
+      [attr.title]="
+        locked() ? t.timesheet.unlockHint(ref().name) : t.timesheet.lockHint(ref().name)
+      "
+      (click)="toggleLock()"
+    >
+      <app-icon [name]="locked() ? 'lock' : 'unlock'" />{{ t.timesheet.lockMonth }}
+    </button>
+  </div>
+</div>
+
+@if (!hasOrders()) {
+  <section class="pt-card">
+    <p class="pt-hint">
+      {{ t.timesheet.emptyBefore }}<a routerLink="/projects">{{ t.timesheet.emptyLink }}</a
+      >{{ t.timesheet.emptyAfter }}
+    </p>
+  </section>
+} @else {
+  @let monthName = ref().name;
+  <div class="pt-table">
+    <div
+      class="pt-table__grid"
+      role="table"
+      [attr.aria-label]="t.timesheet.tableLabel(monthName)"
+      (keydown)="navigate($event)"
+    >
+      <div class="pt-row pt-row--head" role="row">
+        <span role="presentation"></span>
+        <span class="pt-cell" role="columnheader">{{ t.timesheet.columns.day }}</span>
+        <span class="pt-cell pt-cell--center" role="columnheader">{{
+          t.timesheet.columns.hours
+        }}</span>
+        <span class="pt-cell" role="columnheader">{{ t.timesheet.columns.order }}</span>
+        <span class="pt-cell" role="columnheader">{{ t.timesheet.columns.location }}</span>
+        <span
+          class="pt-cell pt-cell--center"
+          role="columnheader"
+          [attr.title]="t.timesheet.totalHint(monthName)"
+          >{{ t.timesheet.columns.total }}</span
+        >
+        <span
+          class="pt-cell pt-cell--center"
+          role="columnheader"
+          [attr.title]="t.timesheet.forecastHint(monthName)"
+          >{{ t.timesheet.columns.forecast }}</span
+        >
+        <span
+          class="pt-cell pt-cell--center"
+          role="columnheader"
+          [attr.title]="t.timesheet.remainingHint"
+          >{{ t.timesheet.columns.remaining }}</span
+        >
+        <span class="pt-cell pt-cell--center" role="columnheader">{{
+          t.timesheet.columns.notes
+        }}</span>
+        <span role="presentation"></span>
+      </div>
+
+      @for (row of rows(); track row.key) {
+        @let day = row.day;
+        <div
+          class="pt-row entry"
+          role="row"
+          [class.off]="day.off"
+          [class.today]="day.today"
+          [class.first]="row.first"
+          [class.week-start]="row.first && day.weekStart"
+          [style.--row-color]="row.entry?.option?.color ?? null"
+        >
+          <span class="pt-stripe" role="presentation"></span>
+
+          <!-- The day, in its first row. -->
+          <span class="pt-cell day-cell" role="cell">
+            @if (row.first) {
+              <span
+                class="day"
+                [class.over]="day.booked > fullDay"
+                [attr.title]="
+                  day.booked > fullDay ? t.timesheet.dayHours(day.booked | hours) : null
+                "
+              >
+                <span class="weekday">{{ day.weekday }}</span>
+                <span class="date">{{ day.dayOfMonth }}</span>
+              </span>
+            }
+          </span>
+
+          <span class="pt-cell hours-cell" role="cell">
+            <input
+              #hours
+              class="pt-grid-input hours-input"
+              type="text"
+              inputmode="decimal"
+              autocomplete="off"
+              [placeholder]="t.common.empty"
+              [value]="value(row.days)"
+              [readOnly]="locked()"
+              [attr.title]="locked() ? t.timesheet.lockedCell : null"
+              [attr.aria-label]="t.timesheet.hoursLabel(day.label)"
+              (change)="setHours(hours, row)"
+              (focus)="hours.select()"
+            />
+          </span>
+
+          <!--
+            Project and order. An empty row shows a public holiday's name, on other days off a
+            dash like the hours (user, 2026-11-11).
+          -->
+          <span class="pt-cell control-cell" role="cell">
+            <app-order-select
+              [class.holiday]="day.holiday"
+              [options]="row.options"
+              [value]="row.entry?.order?.id ?? null"
+              [disabled]="locked()"
+              [placeholder]="
+                day.holiday
+                  ? t.holidays[day.holiday]
+                  : day.off
+                    ? t.common.empty
+                    : t.timesheet.chooseOrder
+              "
+              [empty]="t.timesheet.noOrders"
+              [label]="t.timesheet.orderLabel(day.label)"
+              (valueChange)="pickOrder(row, $event)"
+            />
+          </span>
+
+          <span class="pt-cell control-cell" role="cell">
+            @if (row.location; as location) {
+              <app-location-select
+                [value]="location"
+                [disabled]="locked()"
+                [label]="t.timesheet.locationLabel(day.label)"
+                (valueChange)="setLocation(row, $event)"
+              />
+            }
+          </span>
+
+          <!-- The order's month up to this row: booked, planned, and planned less booked. -->
+          @if (row.entry) {
+            <span class="pt-cell pt-cell--center pt-num" role="cell">{{
+              (row.booking ? row.total : null) | days: false : 1
+            }}</span>
+            <span class="pt-cell pt-cell--center pt-num" role="cell">{{
+              row.forecast | days: false
+            }}</span>
+            <span class="pt-cell pt-cell--center" role="cell">
+              @if (row.remaining !== null) {
+                <span class="pt-chip" [class]="deltaChip(row.remaining)">{{
+                  row.remaining | delta: 1
+                }}</span>
+              } @else {
+                {{ t.common.empty }}
+              }
+            </span>
+          } @else {
+            <span class="pt-cell" role="cell"></span>
+            <span class="pt-cell" role="cell"></span>
+            <span class="pt-cell" role="cell"></span>
+          }
+
+          <!--
+            The day's note, in its first row: an icon, filled when there is a note, which shows on
+            hover; a click opens it in a dialog (user, 2026-11-10).
+          -->
+          <span class="pt-cell pt-cell--center note-cell" role="cell">
+            @if (row.first) {
+              @let text = note(day.date);
+              <button
+                type="button"
+                class="pt-toggle note"
+                [class.has-note]="!!text"
+                [disabled]="locked() && !text"
+                [style.anchor-name]="'--note-' + day.date"
+                [attr.aria-label]="t.timesheet.noteLabel(day.label)"
+                [attr.aria-describedby]="text && tip()?.date === day.date ? 'note-tip' : null"
+                [attr.title]="text ? null : locked() ? t.timesheet.lockedCell : t.timesheet.addNote"
+                (mouseenter)="showTip(day.date, text)"
+                (mouseleave)="tip.set(null)"
+                (focus)="showTip(day.date, text)"
+                (blur)="tip.set(null)"
+                (click)="tip.set(null); openNote(day)"
+              >
+                <app-icon name="note" />
+              </button>
+            }
+          </span>
+
+          <!-- Delete (a day's only row starts over empty) and + for another order on the day. -->
+          <span class="pt-cell pt-cell--center action-cell" role="cell">
+            @if (!locked()) {
+              <button
+                type="button"
+                class="pt-toggle"
+                [disabled]="!row.canDelete"
+                [attr.aria-label]="t.timesheet.removeEntry(day.label)"
+                [attr.title]="t.timesheet.removeEntry(day.label)"
+                (click)="deleteRow(row)"
+              >
+                <app-icon name="trash" />
+              </button>
+              <button
+                type="button"
+                class="pt-toggle"
+                [disabled]="!row.canAdd"
+                [attr.aria-label]="t.timesheet.addEntry(day.label)"
+                [attr.title]="
+                  row.canAdd ? t.timesheet.addEntry(day.label) : t.timesheet.addEntryBlocked
+                "
+                (click)="addRow(day.date)"
+              >
+                <app-icon name="plus" />
+              </button>
+            }
+          </span>
+        </div>
+      }
+
+      @let totals = monthTotals();
+      <div class="pt-row pt-row--total" role="row">
+        <span role="presentation"></span>
+        <span
+          class="pt-cell total-label"
+          role="rowheader"
+          [attr.title]="t.timesheet.monthSumHint(monthName)"
+          >{{ t.timesheet.monthSum }}</span
+        >
+        <span class="pt-cell pt-cell--center" role="cell">{{
+          totals.booked || null | hours: false
+        }}</span>
+        <span class="pt-cell" role="cell"></span>
+        <span class="pt-cell" role="cell"></span>
+        <span class="pt-cell pt-cell--center" role="cell">{{
+          totals.booked || null | days: false : 1
+        }}</span>
+        <span class="pt-cell pt-cell--center" role="cell">{{
+          totals.planned || null | days: false
+        }}</span>
+        <span class="pt-cell pt-cell--center" role="cell">
+          @if (totals.remaining !== null) {
+            <span class="pt-chip" [class]="deltaChip(totals.remaining)">{{
+              totals.remaining | delta: 1
+            }}</span>
+          }
+        </span>
+        <!-- Notes and actions. -->
+        <span class="pt-cell" role="cell"></span>
+        <span class="pt-cell" role="cell"></span>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- The note of the hovered (or focused) icon, rendered from Markdown, beside the icon. -->
+@if (tip(); as shown) {
+  <div
+    id="note-tip"
+    class="note-tip pt-markdown"
+    role="tooltip"
+    [style.position-anchor]="'--note-' + shown.date"
+    [innerHTML]="shown.html"
+  ></div>
+}
+
+<app-note-dialog (saved)="saveNote($event)" />

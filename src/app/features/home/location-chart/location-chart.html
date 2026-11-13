@@ -1,0 +1,56 @@
+<section class="pt-card" aria-labelledby="location-chart-title">
+  <div class="pt-card__head">
+    <h2 class="pt-card__title" id="location-chart-title">{{ t.home.locationChart.title }}</h2>
+  </div>
+  <div class="chart">
+    <div class="chart__plot">
+      <div class="pt-bars" role="list" [attr.aria-label]="t.home.locationChart.label(year())">
+        @for (bar of bars(); track bar.label) {
+          <div
+            class="pt-bar"
+            role="listitem"
+            [attr.title]="bar.title"
+            [attr.aria-label]="bar.title"
+          >
+            @if (bar.segments.length) {
+              <span class="pt-stack">
+                @for (segment of bar.segments; track segment.location) {
+                  <span
+                    class="pt-stack__seg"
+                    [style.--share.%]="segment.share"
+                    [style.--swatch-color]="segment.color"
+                  ></span>
+                }
+              </span>
+            } @else {
+              <span class="pt-hatch"></span>
+            }
+          </div>
+        }
+        @for (at of targetLines(); track $index) {
+          <span class="pt-target-line" [style.--at.%]="at" aria-hidden="true"></span>
+        }
+      </div>
+      <div class="pt-axis" aria-hidden="true">
+        @for (bar of bars(); track bar.label) {
+          <span [class.axis__year]="bar.year">{{ bar.label }}</span>
+        }
+      </div>
+      <div class="pt-legend legend">
+        @for (item of legend; track item.name) {
+          <span class="pt-legend__item">
+            <span class="pt-legend__swatch" [style.--swatch-color]="item.color"></span>
+            {{ item.name }}
+          </span>
+        }
+      </div>
+    </div>
+    <div class="chart__targets" aria-hidden="true">
+      @for (label of targetLabels(); track label.name) {
+        <span class="chart__target" [style.bottom.%]="label.at">
+          {{ label.name }} <strong class="target__value">{{ label.percent }}</strong>
+        </span>
+      }
+    </div>
+  </div>
+</section>

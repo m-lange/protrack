@@ -1,0 +1,200 @@
+:host {
+  display: contents;
+}
+
+/*
+ * Day, hours, project and order (a public holiday's name in its empty rows), location, Total, Forecast
+ * and Remaining of the order's month, the day's note as an icon, and the actions (delete, +) at
+ * the end like in the other tables (user, 2026-11-10). Project and order take the room left.
+ */
+.pt-table__grid {
+  --pt-cols: var(--stripe) 64px 80px minmax(360px, 1fr) 176px 80px 88px 104px 72px 88px;
+  min-width: 1130px;
+}
+
+.entry {
+  min-height: var(--row-project);
+}
+
+.entry > .pt-cell {
+  display: grid;
+  grid-template-rows: var(--row-project);
+  align-items: center;
+  align-content: start;
+}
+
+/*
+ * The project's color in front, full like a project row of My projects. Today's rows without a
+ * project yet are blue there, like their day (user, 2026-11-10).
+ */
+.entry .pt-stripe {
+  background: var(--row-color, transparent);
+}
+
+.entry.today .pt-stripe {
+  background: var(--row-color, var(--timesheet-today));
+}
+
+/* Weekends and public holidays are greyed out. */
+.entry.off {
+  background: var(--timesheet-off);
+}
+
+/* A public holiday's name in the empty project control, dark red and bold (user, 2026-11-11). */
+app-order-select.holiday {
+  --placeholder-color: var(--holiday-text);
+  --placeholder-weight: 700;
+}
+
+/* A line between the weeks. */
+.entry.week-start {
+  border-top: 1px solid var(--border-input);
+}
+
+/* The rows of one day are divided more quietly than the days. */
+.entry:has(+ .entry:not(.first)) {
+  border-bottom-color: var(--border-subtle);
+}
+
+/* The day: weekday above its number. */
+.day {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.weekday {
+  color: var(--muted);
+}
+
+.date {
+  color: var(--ink);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.off .weekday,
+.off .date {
+  color: var(--text-secondary);
+}
+
+/*
+ * Today: the day head of the old weekly timesheet turned on its side, blue with the accent bar
+ * on its right (user, 2026-11-10).
+ */
+.today .day-cell {
+  background: var(--timesheet-today);
+  box-shadow: inset -3px 0 0 var(--timesheet-accent);
+}
+
+.today .weekday,
+.today .date {
+  color: var(--timesheet-today-text);
+}
+
+/* More than 8 hours booked on the day. */
+.day.over .date {
+  color: var(--over-text);
+}
+
+/* Delete and + side by side. */
+.action-cell {
+  grid-auto-flow: column;
+  gap: var(--space-4);
+  padding: 0;
+}
+
+/*
+ * Nothing to delete, or the day's empty row needs an order first: the button is hidden, in the
+ * timesheet only (user, 2026-11-10); its place stays, so the others don't move.
+ */
+.action-cell .pt-toggle:disabled {
+  visibility: hidden;
+}
+
+.hours-cell,
+.control-cell {
+  padding: 0 var(--space-6);
+}
+
+.hours-input {
+  height: var(--cell-input);
+  text-align: center;
+}
+
+.hours-input:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: var(--shadow-focus-halo);
+}
+
+/* A locked month: hours show as plain values, without a frame. */
+.hours-input:read-only {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  cursor: default;
+}
+
+/*
+ * The note icon: quiet without a note, filled in the accent with one, so the days with notes
+ * stand out (user, 2026-11-10).
+ */
+.note.has-note {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.note:disabled {
+  visibility: hidden;
+}
+
+.total-label {
+  padding-left: var(--space-14);
+}
+
+/* This month: bold like This year in the top bar. */
+.this-month {
+  font-weight: 700;
+}
+
+/* The month between its arrows. */
+.month-name {
+  min-width: 150px;
+}
+
+/* Lock month: a toggle, as tall as the month stepper beside it (user, 2026-11-07). */
+.pt-btn.lock {
+  align-self: stretch;
+  height: auto;
+}
+
+/* Pressed, it takes the soft accent. */
+.lock[aria-pressed='true'] {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--link);
+}
+
+/*
+ * The note's tooltip: rendered Markdown in a small card, below its icon and ending at its right
+ * edge, above it when there is no room below. Fixed and anchored, so no frame clips it.
+ */
+.note-tip {
+  position: fixed;
+  top: anchor(bottom);
+  right: anchor(right);
+  position-try-fallbacks: flip-block;
+  z-index: 20;
+  max-width: 360px;
+  max-height: 50vh;
+  margin: var(--space-4) 0;
+  padding: var(--space-10) var(--space-12);
+  overflow: hidden;
+  border: 1px solid var(--border-input);
+  background: var(--surface);
+  box-shadow: var(--shadow-segment);
+  color: var(--text);
+  line-height: 1.5;
+  pointer-events: none;
+}

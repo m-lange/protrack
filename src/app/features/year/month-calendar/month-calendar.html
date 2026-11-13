@@ -1,0 +1,35 @@
+<!-- Framed like the tables (user, 2026-11-07): the month name is the header row. -->
+<div class="pt-row pt-row--head">
+  <span class="pt-cell pt-cell--name">
+    <a
+      class="name"
+      [routerLink]="['/timesheet', year(), month().month + 1]"
+      [attr.title]="t.year.openMonth(name())"
+      >{{ t.months[month().month] }}</a
+    >
+  </span>
+</div>
+
+<div class="pt-cal">
+  @for (letter of t.weekdaysNarrow; track $index) {
+    <span class="pt-cal__wd" aria-hidden="true">{{ letter }}</span>
+  }
+  @for (blank of leading(); track $index) {
+    <span class="pt-day pt-day--blank"></span>
+  }
+  @for (cell of cells(); track cell.day.date) {
+    <span
+      class="pt-day"
+      [class]="cell.classes"
+      [style.--day-color]="cell.color"
+      [style.--day-color-2]="cell.color2"
+      role="img"
+      [attr.title]="cell.title"
+      [attr.aria-label]="cell.title"
+      >{{ cell.day.dayOfMonth }}</span
+    >
+  }
+  @for (blank of trailing(); track $index) {
+    <span class="pt-day pt-day--blank"></span>
+  }
+</div>

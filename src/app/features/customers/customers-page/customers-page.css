@@ -1,0 +1,4 @@
+/* The page head and the table are items of .page-content, which spaces them. */
+:host {
+  display: contents;
+}

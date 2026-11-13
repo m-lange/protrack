@@ -1,0 +1,85 @@
+:host {
+  display: contents;
+}
+
+.pt-table__grid {
+  --col-name: 350px;
+  --col-month: 64px;
+  --col-total: 88px;
+  --col-budget: 72px;
+  --col-remaining: 120px;
+  /* The name column grows from its minimum; all others have a fixed width. --month-count is set
+     by the template: 12, or fewer while months are folded into one column. */
+  --pt-cols: var(--stripe) minmax(var(--col-name), 1fr)
+    repeat(var(--month-count, 12), var(--col-month)) var(--col-total) var(--col-budget)
+    var(--col-remaining);
+  min-width: calc(
+    var(--stripe) + var(--col-name) + var(--month-count, 12) * var(--col-month) + var(--col-total) +
+      var(--col-budget) + var(--col-remaining)
+  );
+}
+
+/*
+ * The button in a month head: folds January through this month into one column, or unfolds the
+ * folded column. It fills the head; a month shows its name, on hover the chevron in its place.
+ */
+.fold {
+  align-self: stretch;
+  flex: 1;
+  margin-inline: calc(-1 * var(--space-10));
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.fold--month app-icon,
+.fold--month:is(:hover, :focus-visible) .fold__name {
+  display: none;
+}
+
+.fold--month:is(:hover, :focus-visible) app-icon {
+  display: inline-flex;
+}
+
+/* Keeps the names of open-booking projects, which have nothing to collapse, in line. */
+.toggle-space {
+  width: var(--cell-input);
+  flex: none;
+}
+
+/* Month inputs are centered in their column. */
+.pt-grid-input {
+  text-align: center;
+}
+
+/* Month heads, values and inputs are centered in their column. */
+.pt-time-head {
+  align-items: center;
+}
+
+.pt-time-cell {
+  justify-content: center;
+}
+
+/* The working days and chargeability rows sit one under the other, divided by a line. */
+.pt-row--total + .pt-row--total {
+  border-top: 1px solid var(--border);
+}
+
+/* Chargeability badges; planned months (and a year with planned months) are lighter. */
+.pt-chip--plus.planned {
+  background: color-mix(in srgb, var(--delta-plus) 40%, var(--surface));
+}
+
+.pt-chip--minus.planned {
+  background: color-mix(in srgb, var(--delta-minus) 40%, var(--surface));
+}
+
+.pt-chip--minus-strong.planned {
+  background: color-mix(in srgb, var(--delta-minus-strong) 40%, var(--surface));
+}

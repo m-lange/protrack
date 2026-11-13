@@ -1,0 +1,78 @@
+:host {
+  /* The segment colors, lightened toward the surface. */
+  --segment-tint: 55%;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+/* The bar with a segment per share; the handles sit on top at the boundaries. */
+.track {
+  position: relative;
+  margin: var(--space-6) 0;
+  touch-action: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+.bar {
+  display: flex;
+  height: var(--space-12);
+  overflow: hidden;
+  border-radius: var(--radius-6);
+  background: var(--track);
+}
+
+.segment {
+  width: var(--share);
+  background: color-mix(in srgb, var(--segment-color) var(--segment-tint), var(--surface));
+}
+
+.handle {
+  position: absolute;
+  top: 50%;
+  left: var(--at);
+  width: var(--space-10);
+  height: var(--space-18);
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-4);
+  background: var(--surface);
+  box-shadow: var(--shadow-segment);
+  cursor: ew-resize;
+}
+
+/* A 44px hit target around the slim handle. */
+.handle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--hit-target);
+  height: var(--hit-target);
+  transform: translate(-50%, -50%);
+}
+
+.handle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8) var(--space-24);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The legend shows each color at full strength; only the slider's segments are lightened. */
+.pt-target__swatch {
+  background: var(--segment-color);
+}
+
+.legend strong {
+  color: var(--ink);
+}

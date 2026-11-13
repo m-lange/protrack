@@ -1,0 +1,107 @@
+:host {
+  display: contents;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--space-16);
+  max-width: calc(170px * 2 + var(--space-16));
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+/* Restore points: when | what | restore and download. */
+.snapshots {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.snapshot {
+  display: grid;
+  grid-template-columns: minmax(170px, auto) 1fr auto;
+  align-items: center;
+  gap: var(--space-16);
+  min-height: var(--hit-target);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.snapshot:last-child {
+  border-bottom: 0;
+}
+
+.snapshot__when {
+  color: var(--ink);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.snapshot__what {
+  color: var(--text-secondary);
+}
+
+.more {
+  align-self: flex-start;
+  padding-inline: 0;
+}
+
+.file-name {
+  color: var(--ink);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.file-button {
+  position: relative;
+  cursor: pointer;
+}
+
+/* The file input is visually hidden; its label is the button and shows the focus ring. */
+.file-button:focus-within {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/*
+ * Reset is the one destructive card: its top rule, title and buttons in the danger color.
+ * No tinted background (user, 2026-11-10).
+ */
+.danger-card {
+  border-color: var(--danger-text);
+}
+
+.danger-title {
+  color: var(--danger-text);
+}
+
+/* Language, December 24 and 31: as wide as their choices, not the whole card (user, 2026-11-10). */
+.choice {
+  align-self: flex-start;
+}
+
+/* The flag before a language's name, in a hairline frame so white edges show (user, 2026-11-11). */
+.flag {
+  flex: none;
+  object-fit: cover;
+  outline: 1px solid var(--border-subtle);
+}

@@ -1,0 +1,277 @@
+@let view = table();
+@let active = status() === 'active';
+@if (!active && view.projectCount === 0) {
+  <section class="pt-card">
+    <p class="pt-hint">{{ t.projects.archiveEmpty }}</p>
+  </section>
+} @else {
+  <div class="pt-table tree-table">
+    <div class="pt-table__grid" role="table" [attr.aria-label]="t.projects.tables[status()]">
+      <div class="pt-row pt-row--head" role="row">
+        <span role="presentation"></span>
+        <span class="pt-cell" role="columnheader">{{ t.projects.columns.name }}</span>
+        <span class="pt-cell pt-cell--center" role="columnheader">{{
+          t.projects.columns.timeline
+        }}</span>
+        <span class="pt-cell pt-cell--center" role="columnheader">{{
+          t.projects.columns.location
+        }}</span>
+        <span class="pt-cell pt-cell--center" role="columnheader">{{
+          t.projects.columns.billing
+        }}</span>
+        <span class="pt-cell pt-cell--num" role="columnheader">{{
+          t.projects.columns.budget
+        }}</span>
+        <span class="pt-cell pt-cell--num" role="columnheader">{{
+          t.projects.columns.booked
+        }}</span>
+        <span class="pt-cell pt-cell--center" role="columnheader">{{
+          t.projects.columns.remaining
+        }}</span>
+        <!-- The row actions, at the end like in the other tables (user, 2026-11-10). -->
+        <span role="presentation"></span>
+      </div>
+
+      @for (customerRow of view.customers; track customerRow.node.customer.id) {
+        @let customer = customerRow.node.customer;
+        @let customerOpen = !tree.isCollapsed(customerKey(status(), customer.id));
+        <div class="pt-row pt-row--customer" role="row">
+          <span class="pt-stripe" role="presentation"></span>
+          <span class="pt-cell pt-cell--name" role="cell">
+            @if (customerRow.projects.length > 0) {
+              <button
+                type="button"
+                class="pt-toggle"
+                [attr.aria-label]="
+                  customerOpen
+                    ? t.projects.collapse(customer.name)
+                    : t.projects.expand(customer.name)
+                "
+                [attr.aria-expanded]="customerOpen"
+                (click)="tree.toggle(customerKey(status(), customer.id))"
+              >
+                <app-icon name="chevron-down" />
+              </button>
+            } @else {
+              <span class="toggle-space"></span>
+            }
+            <app-customer-badge [name]="customer.name" [logo]="customer.logo" />
+            <span class="pt-cell__text">{{ customer.name }}</span>
+            <span class="pt-cell__meta">{{
+              t.common.projectCount(customerRow.projects.length)
+            }}</span>
+            <!-- Adding a project stays in the name cell (user, 2026-11-10); the others moved. -->
+            @if (active) {
+              <a
+                class="pt-toggle tool"
+                routerLink="/projects/new"
+                [queryParams]="{ customer: customer.id }"
+                [attr.aria-label]="t.projects.addProjectFor(customer.name)"
+                [attr.title]="t.projects.addProjectFor(customer.name)"
+              >
+                <app-icon name="plus" />
+              </a>
+            }
+          </span>
+          <span class="pt-cell pt-cell--center" role="cell">
+            <span class="pt-cell__meta range">{{ customerRow.node.span | dateRange }}</span>
+          </span>
+          <span class="pt-cell" role="cell"></span>
+          <span class="pt-cell" role="cell"></span>
+          <ng-container
+            [ngTemplateOutlet]="numbers"
+            [ngTemplateOutletContext]="{ $implicit: customerRow.figures }"
+          />
+          <span class="pt-cell" role="cell"></span>
+        </div>
+
+        @if (customerOpen) {
+          @for (
+            projectRow of customerRow.projects;
+            track projectRow.node.project.id;
+            let firstProject = $first, lastProject = $last
+          ) {
+            @let project = projectRow.node.project;
+            @let projectOpen = !tree.isCollapsed(projectKey(project.id));
+            <!-- An open-booking project has no orders to show: its row carries the location. -->
+            @let open = openOrder(project);
+            <!-- A project row moves by drag and drop among its customer's projects. -->
+            <div
+              class="pt-row pt-row--project"
+              role="row"
+              draggable="true"
+              [style.--row-color]="projectRow.color"
+              [class.dragging]="dragged()?.id === project.id"
+              [class.drop-target]="over() === project.id && dragged()?.id !== project.id"
+              (dragstart)="dragStart($event, project.id, customer.id)"
+              (dragover)="dragOver($event, project.id, customer.id)"
+              (dragleave)="over.set(null)"
+              (drop)="drop($event, project.id, customerRow)"
+              (dragend)="dragEnd()"
+            >
+              <span class="pt-stripe" role="presentation"></span>
+              <span class="pt-cell pt-cell--name project-name" role="cell">
+                @if (!open && projectRow.orders.length > 0) {
+                  <button
+                    type="button"
+                    class="pt-toggle"
+                    [attr.aria-label]="
+                      projectOpen
+                        ? t.projects.collapse(project.name)
+                        : t.projects.expand(project.name)
+                    "
+                    [attr.aria-expanded]="projectOpen"
+                    (click)="tree.toggle(projectKey(project.id))"
+                  >
+                    <app-icon name="chevron-down" />
+                  </button>
+                } @else {
+                  <span class="toggle-space"></span>
+                }
+                <span class="pt-dot"></span>
+                <!-- The name opens the project, like the customer names in My customers. -->
+                <a
+                  class="pt-cell__text name"
+                  draggable="false"
+                  [routerLink]="['/projects', project.id]"
+                  >{{ project.name }}</a
+                >
+                @if (!open && projectRow.orders.length === 0) {
+                  <span class="pt-cell__meta">{{ t.projects.noOrders }}</span>
+                }
+              </span>
+              <span class="pt-cell" role="cell">
+                @if (project.booking === 'open') {
+                  <app-timeline-pill [span]="null" />
+                } @else if (projectRow.node.span; as span) {
+                  <app-timeline-pill [span]="span" />
+                }
+              </span>
+              <span class="pt-cell pt-cell--center" role="cell">
+                @if (open) {
+                  <span class="pt-chip" [class]="location(open).chip">
+                    <app-icon [name]="location(open).icon" [size]="13" />{{
+                      t.locations[open.location]
+                    }}
+                  </span>
+                }
+              </span>
+              <span class="pt-cell pt-cell--center" role="cell">
+                <span class="pt-chip" [class]="billing(projectRow).chip">{{
+                  t.billing[project.billing]
+                }}</span>
+              </span>
+              <ng-container
+                [ngTemplateOutlet]="numbers"
+                [ngTemplateOutletContext]="{ $implicit: projectRow.figures }"
+              />
+              <span class="pt-cell pt-cell--center action-cell" role="cell">
+                <button
+                  type="button"
+                  class="pt-toggle"
+                  [attr.data-move]="project.id + '-up'"
+                  [disabled]="firstProject"
+                  [attr.aria-label]="t.projects.moveUp(project.name)"
+                  [attr.title]="t.projects.moveUp(project.name)"
+                  (click)="move(project.id, -1, customerRow)"
+                >
+                  <app-icon name="chevron-up" />
+                </button>
+                <button
+                  type="button"
+                  class="pt-toggle"
+                  [attr.data-move]="project.id + '-down'"
+                  [disabled]="lastProject"
+                  [attr.aria-label]="t.projects.moveDown(project.name)"
+                  [attr.title]="t.projects.moveDown(project.name)"
+                  (click)="move(project.id, 1, customerRow)"
+                >
+                  <app-icon name="chevron-down" />
+                </button>
+                <a
+                  class="pt-toggle"
+                  draggable="false"
+                  [routerLink]="['/projects', project.id]"
+                  [attr.aria-label]="t.projects.edit(project.name)"
+                  [attr.title]="t.projects.edit(project.name)"
+                >
+                  <app-icon name="edit" />
+                </a>
+              </span>
+            </div>
+
+            @if (projectOpen && !open) {
+              @for (orderRow of projectRow.orders; track orderRow.order.id) {
+                @let order = orderRow.order;
+                <div class="pt-row pt-row--order" role="row" [style.--row-color]="projectRow.color">
+                  <span class="pt-stripe" role="presentation"></span>
+                  <span class="pt-cell pt-cell--name order-name" role="cell">
+                    <span class="pt-ring"></span>
+                    <span class="pt-cell__text">{{ order.name }}</span>
+                  </span>
+                  <span class="pt-cell" role="cell">
+                    <app-timeline-pill [span]="timelineOf(order)" order />
+                  </span>
+                  <span class="pt-cell pt-cell--center" role="cell">
+                    <span class="pt-chip" [class]="location(order).chip">
+                      <app-icon [name]="location(order).icon" [size]="13" />{{
+                        t.locations[order.location]
+                      }}
+                    </span>
+                  </span>
+                  <span class="pt-cell" role="cell"></span>
+                  <ng-container
+                    [ngTemplateOutlet]="numbers"
+                    [ngTemplateOutletContext]="{ $implicit: orderRow.figures }"
+                  />
+                  <span class="pt-cell" role="cell"></span>
+                </div>
+              }
+            }
+          }
+        }
+      }
+
+      @if (active) {
+        <div class="pt-row pt-row--add" role="row">
+          <span role="presentation"></span>
+          <a class="pt-add-row" routerLink="/projects/new" role="cell">
+            <app-icon name="plus" [size]="14" />{{ t.projects.addProject }}
+          </a>
+        </div>
+      }
+
+      <div class="pt-row pt-row--total" role="row">
+        <span role="presentation"></span>
+        <span class="pt-cell total-label" role="cell">{{ t.projects.total }}</span>
+        <span class="pt-cell pt-cell--center" role="cell">
+          <span class="pt-cell__meta range">{{ view.span | dateRange }}</span>
+        </span>
+        <span class="pt-cell" role="cell"></span>
+        <span class="pt-cell" role="cell"></span>
+        <ng-container
+          [ngTemplateOutlet]="numbers"
+          [ngTemplateOutletContext]="{ $implicit: view.figures }"
+        />
+        <span class="pt-cell" role="cell"></span>
+      </div>
+    </div>
+  </div>
+}
+
+<!--
+  Budget, Booked and Remaining of a row; open-booking orders count only in Booked. Remaining is a
+  chip like Budget − forecast in the Forecast (user, 2026-11-10; the Burn column is gone).
+-->
+<ng-template #numbers let-figures>
+  @let remaining = figures.budget - figures.spent;
+  <span class="pt-cell pt-cell--num" role="cell">{{ figures.budget || null | days: false }}</span>
+  <span class="pt-cell pt-cell--num" role="cell">{{ figures.booked || null | days: false }}</span>
+  <span class="pt-cell pt-cell--center" role="cell">
+    @if (figures.budget || figures.spent) {
+      <span class="pt-chip" [class]="deltaChip(remaining)">{{ remaining | delta }}</span>
+    } @else {
+      {{ t.common.empty }}
+    }
+  </span>
+</ng-template>

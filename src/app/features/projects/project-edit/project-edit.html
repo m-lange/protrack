@@ -1,0 +1,344 @@
+<nav class="pt-breadcrumb" [attr.aria-label]="t.common.breadcrumb">
+  <a routerLink="/projects"><app-icon name="chevron-left" [size]="14" />{{ t.projectEdit.back }}</a>
+  @if (customerName(); as customerName) {
+    <span aria-hidden="true">›</span>
+    <span>{{ customerName }}</span>
+  }
+  <span aria-hidden="true">›</span>
+  <span aria-current="page">{{ title() }}</span>
+</nav>
+
+@if (missing()) {
+  <div class="pt-page-head">
+    <h1 class="pt-page-title">{{ t.projectEdit.notFoundTitle }}</h1>
+  </div>
+  <section class="pt-card">
+    <p class="pt-hint">
+      {{ t.projectEdit.notFoundBefore
+      }}<a routerLink="/projects">{{ t.projectEdit.notFoundLink }}</a
+      >{{ t.projectEdit.notFoundAfter }}
+    </p>
+  </section>
+} @else {
+  <div class="pt-page-head head">
+    <div class="title" [style.--row-color]="color()">
+      <span class="pt-color-tile"></span>
+      <h1 class="pt-page-title">{{ title() }}</h1>
+      <span class="pt-chip pt-chip--status" [class]="statusChip()">{{
+        t.status[model().status]
+      }}</span>
+      <span class="pt-chip pt-chip--status" [class]="billingChip()">{{
+        t.billing[model().billing]
+      }}</span>
+    </div>
+    <!--
+      The actions, and in the same place the confirmation of a delete: both rows lie on top of
+      each other, so Keep takes the exact place of Delete (user, 2026-11-10). Only one shows.
+    -->
+    <div class="pt-page-head__actions delete-states">
+      <div class="state" [class.inactive]="confirmingDelete()">
+        @if (!isNew()) {
+          <button
+            type="button"
+            class="pt-btn pt-btn--danger"
+            [disabled]="hasBookings()"
+            [attr.title]="hasBookings() ? t.projectEdit.deleteBlocked : null"
+            (click)="confirmingDelete.set(true)"
+          >
+            <app-icon name="trash" />{{ t.projectEdit.delete }}
+          </button>
+        }
+        <a class="pt-btn pt-btn--secondary" routerLink="/projects">{{ t.common.cancel }}</a>
+        <button type="submit" form="project-form" class="pt-btn pt-btn--primary save">
+          {{ isNew() ? t.projectEdit.add : t.projectEdit.save }}
+        </button>
+      </div>
+      @if (confirmingDelete()) {
+        <div class="state">
+          <button
+            type="button"
+            class="pt-btn pt-btn--secondary"
+            (click)="confirmingDelete.set(false)"
+          >
+            {{ t.projectEdit.keep }}
+          </button>
+          <button type="button" class="pt-btn pt-btn--danger danger-fill" (click)="delete()">
+            <app-icon name="trash" />{{ t.projectEdit.delete }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <form id="project-form" class="form" [formRoot]="projectForm">
+    <section class="pt-card pt-card--form" aria-labelledby="project-details">
+      <h2 class="pt-card__title" id="project-details">{{ t.projectEdit.details }}</h2>
+      <div class="fields">
+        <label class="pt-field name">
+          {{ t.projectEdit.name }}
+          <input
+            class="pt-input"
+            type="text"
+            autocomplete="off"
+            [formField]="projectForm.name"
+            [attr.aria-invalid]="!!nameError()"
+            [attr.aria-describedby]="nameError() ? 'name-error' : null"
+          />
+        </label>
+        <div class="pt-field">
+          <span>{{ t.projectEdit.customer }}</span>
+          <app-customer-select
+            [formField]="projectForm.customerId"
+            [label]="t.projectEdit.customer"
+            [placeholder]="t.projectEdit.chooseCustomer"
+            [describedBy]="customerError() ? 'customer-error' : null"
+          />
+        </div>
+      </div>
+      @if (nameError(); as message) {
+        <p class="pt-hint pt-hint--error" id="name-error">{{ message }}</p>
+      }
+      @if (customerError(); as message) {
+        <p class="pt-hint pt-hint--error" id="customer-error">{{ message }}</p>
+      }
+
+      <div class="choices">
+        <div class="pt-field" role="group" [attr.aria-label]="t.projectEdit.status">
+          {{ t.projectEdit.status }}
+          <div class="pt-segmented">
+            @for (status of statuses; track status.id) {
+              <button
+                type="button"
+                class="pt-segment"
+                [attr.aria-pressed]="model().status === status.id"
+                (click)="setStatus(status.id)"
+              >
+                <span class="pt-segment__dot" [style.--dot-color]="status.color"></span
+                >{{ t.status[status.id] }}
+              </button>
+            }
+          </div>
+        </div>
+        <div class="pt-field" role="group" [attr.aria-label]="t.projectEdit.billing">
+          {{ t.projectEdit.billing }}
+          <div class="pt-segmented">
+            @for (billing of billings; track billing.id) {
+              <button
+                type="button"
+                class="pt-segment"
+                [attr.aria-pressed]="model().billing === billing.id"
+                (click)="setBilling(billing.id)"
+              >
+                {{ t.billing[billing.id] }}
+              </button>
+            }
+          </div>
+        </div>
+        <div class="pt-field" role="group" [attr.aria-label]="t.projectEdit.booking">
+          {{ t.projectEdit.booking }}
+          <div class="pt-segmented">
+            @for (mode of bookingModes; track mode) {
+              <button
+                type="button"
+                class="pt-segment"
+                [attr.aria-pressed]="model().booking === mode"
+                (click)="setBooking(mode)"
+              >
+                {{ t.bookingModes[mode] }}
+              </button>
+            }
+          </div>
+        </div>
+        @if (model().booking === 'open') {
+          <div class="pt-field" role="group" [attr.aria-label]="t.projectEdit.defaultLocation">
+            {{ t.projectEdit.defaultLocation }}
+            <div class="pt-segmented">
+              @for (location of locations; track location.id) {
+                <button
+                  type="button"
+                  class="pt-segment"
+                  [attr.aria-pressed]="model().location === location.id"
+                  (click)="setLocation(location.id)"
+                >
+                  <app-icon [name]="location.icon" [size]="14" />{{ t.locations[location.id] }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="pt-field" role="group" [attr.aria-label]="t.projectEdit.color">
+        {{ t.projectEdit.color }}
+        <div class="pt-swatches">
+          @for (preset of presets; track preset) {
+            <button
+              type="button"
+              class="pt-swatch"
+              [attr.aria-label]="t.projectColors[preset]"
+              [attr.aria-pressed]="model().color === preset"
+              (click)="setColor(preset)"
+            >
+              <span class="pt-swatch__color" [style.--swatch-color]="projectColor(preset)"></span>
+            </button>
+          }
+          @if (customColors().length > 0) {
+            <span class="pt-swatch-sep" aria-hidden="true"></span>
+            @for (custom of customColors(); track custom.color) {
+              <span class="custom">
+                <button
+                  type="button"
+                  class="pt-swatch"
+                  [attr.aria-label]="t.projectEdit.customColor(custom.color.toUpperCase())"
+                  [attr.aria-pressed]="model().color === custom.color"
+                  (click)="setColor(custom.color)"
+                >
+                  <span class="pt-swatch__color" [style.--swatch-color]="custom.color"></span>
+                </button>
+                @if (custom.removable) {
+                  <button
+                    type="button"
+                    class="remove"
+                    [attr.aria-label]="t.projectEdit.removeCustomColor(custom.color.toUpperCase())"
+                    [attr.title]="t.projectEdit.removeCustomColor(custom.color.toUpperCase())"
+                    (click)="removeCustomColor(custom.color)"
+                  >
+                    <app-icon name="close" [size]="13" />
+                  </button>
+                }
+              </span>
+            }
+          }
+          <label class="pt-swatch-add">
+            <input
+              #picker
+              type="color"
+              [value]="hex()"
+              (input)="setColor(picker.value)"
+              (change)="addCustomColor(picker.value)"
+            />{{ t.projectEdit.addCustomColor }}
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- Open-booking projects have no orders (user, 2026-11-10): only PO-restricted ones list them. -->
+    @if (model().booking === 'po') {
+      <section class="pt-card orders" aria-labelledby="project-orders">
+        <div class="pt-card__head">
+          <h2 class="pt-card__title" id="project-orders">{{ t.projectEdit.orders }}</h2>
+        </div>
+        <div class="pt-table" [style.--row-color]="color()">
+          <div class="pt-table__grid" role="table" [attr.aria-label]="t.projectEdit.ordersTable">
+            <div class="pt-row pt-row--head" role="row">
+              <span role="presentation"></span>
+              <span class="pt-cell" role="columnheader">{{ t.projectEdit.columns.name }}</span>
+              <span class="pt-cell" role="columnheader">{{ t.projectEdit.columns.start }}</span>
+              <span class="pt-cell" role="columnheader">{{ t.projectEdit.columns.end }}</span>
+              <span class="pt-cell" role="columnheader">{{ t.projectEdit.columns.location }}</span>
+              <span class="pt-cell pt-cell--num" role="columnheader">{{
+                t.projectEdit.columns.budget
+              }}</span>
+              <span role="presentation"></span>
+            </div>
+            @for (order of projectForm.orders; track $index; let i = $index) {
+              @let value = model().orders[i];
+              @let label = value.name.trim() || t.projectEdit.newOrder(i + 1);
+              <div class="pt-row pt-row--order pt-row--edit" role="row">
+                <span class="pt-stripe" role="presentation"></span>
+                <span class="pt-cell" role="cell">
+                  <span class="pt-ring"></span>
+                  <input
+                    class="pt-inline order-name"
+                    type="text"
+                    autocomplete="off"
+                    [formField]="order.name"
+                    [attr.aria-label]="t.projectEdit.orderName(i + 1)"
+                    [attr.aria-invalid]="invalid(order.name)"
+                  />
+                </span>
+                <span class="pt-cell" role="cell">
+                  <input
+                    class="pt-inline"
+                    type="date"
+                    [formField]="order.start"
+                    [attr.aria-label]="t.projectEdit.orderStart(label)"
+                    [attr.aria-invalid]="invalid(order.start)"
+                  />
+                </span>
+                <span class="pt-cell" role="cell">
+                  <input
+                    class="pt-inline"
+                    type="date"
+                    [formField]="order.end"
+                    [attr.aria-label]="t.projectEdit.orderEnd(label)"
+                    [attr.aria-invalid]="invalid(order.end)"
+                  />
+                </span>
+                <span class="pt-cell" role="cell">
+                  <app-location-select
+                    [formField]="order.location"
+                    [label]="t.projectEdit.orderLocation(label)"
+                  />
+                </span>
+                <span class="pt-cell" role="cell">
+                  <input
+                    class="pt-inline pt-inline--num budget"
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    [placeholder]="t.common.empty"
+                    [formField]="order.budget"
+                    [attr.aria-label]="t.projectEdit.orderBudget(label)"
+                    [attr.aria-invalid]="invalid(order.budget)"
+                  />
+                </span>
+                <span class="pt-cell pt-cell--center" role="cell">
+                  <button
+                    type="button"
+                    class="pt-toggle"
+                    [disabled]="booked(value.id)"
+                    [attr.aria-label]="t.projectEdit.removeOrder(label)"
+                    [attr.title]="
+                      booked(value.id)
+                        ? t.projectEdit.removeOrderBlocked(label)
+                        : t.projectEdit.removeOrder(label)
+                    "
+                    (click)="removeOrder(i)"
+                  >
+                    <app-icon name="trash" />
+                  </button>
+                </span>
+              </div>
+            } @empty {
+              <div class="pt-row pt-row--add" role="row">
+                <span role="presentation"></span>
+                <span class="pt-cell empty" role="cell">{{ t.projectEdit.noOrders }}</span>
+              </div>
+            }
+            <div class="pt-row pt-row--add" role="row">
+              <span role="presentation"></span>
+              <button type="button" class="pt-add-row" role="cell" (click)="addOrder()">
+                <app-icon name="plus" [size]="14" />{{ t.projectEdit.addOrder }}
+              </button>
+            </div>
+          </div>
+        </div>
+        @if (summary().count > 0) {
+          <p class="pt-hint">
+            {{
+              t.projectEdit.ordersSummary(
+                t.common.orderCount(summary().count),
+                summary().budget | days,
+                summary().span | dateRange: true
+              )
+            }}
+          </p>
+        }
+        @for (message of orderErrors(); track message) {
+          <p class="pt-hint pt-hint--error">{{ message }}</p>
+        }
+      </section>
+    }
+  </form>
+}

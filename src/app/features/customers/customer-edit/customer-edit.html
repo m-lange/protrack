@@ -1,0 +1,128 @@
+<nav class="pt-breadcrumb" [attr.aria-label]="t.common.breadcrumb">
+  <a routerLink="/customers"
+    ><app-icon name="chevron-left" [size]="14" />{{ t.customerEdit.back }}</a
+  >
+  <span aria-hidden="true">›</span>
+  <span aria-current="page">{{ title() }}</span>
+</nav>
+
+@if (missing()) {
+  <div class="pt-page-head">
+    <h1 class="pt-page-title">{{ t.customerEdit.notFoundTitle }}</h1>
+  </div>
+  <section class="pt-card">
+    <p class="pt-hint">
+      {{ t.customerEdit.notFoundBefore
+      }}<a routerLink="/customers">{{ t.customerEdit.notFoundLink }}</a
+      >{{ t.customerEdit.notFoundAfter }}
+    </p>
+  </section>
+} @else {
+  <div class="pt-page-head head">
+    <div class="title">
+      <app-customer-badge [name]="badgeName()" [logo]="logo()" size="tile" />
+      <h1 class="pt-page-title">{{ title() }}</h1>
+    </div>
+    <!--
+      The actions, and in the same place the confirmation of a delete: both rows lie on top of
+      each other, so Keep takes the exact place of Delete (user, 2026-11-10). Only one shows.
+    -->
+    <div class="pt-page-head__actions delete-states">
+      <div class="state" [class.inactive]="confirmingDelete()">
+        @if (!isNew()) {
+          <button
+            type="button"
+            class="pt-btn pt-btn--danger"
+            [disabled]="hasProjects()"
+            [attr.title]="hasProjects() ? t.customerEdit.deleteBlocked : null"
+            (click)="confirmingDelete.set(true)"
+          >
+            <app-icon name="trash" />{{ t.customerEdit.delete }}
+          </button>
+        }
+        <a class="pt-btn pt-btn--secondary" routerLink="/customers">{{ t.common.cancel }}</a>
+        <button type="submit" form="customer-form" class="pt-btn pt-btn--primary save">
+          {{ isNew() ? t.customerEdit.add : t.customerEdit.save }}
+        </button>
+      </div>
+      @if (confirmingDelete()) {
+        <div class="state">
+          <button
+            type="button"
+            class="pt-btn pt-btn--secondary"
+            (click)="confirmingDelete.set(false)"
+          >
+            {{ t.customerEdit.keep }}
+          </button>
+          <button type="button" class="pt-btn pt-btn--danger danger-fill" (click)="delete()">
+            <app-icon name="trash" />{{ t.customerEdit.delete }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <form id="customer-form" class="pt-card pt-card--form" [formRoot]="customerForm">
+    <h2 class="pt-card__title">{{ t.customerEdit.details }}</h2>
+    <div class="fields">
+      <label class="pt-field name">
+        {{ t.customerEdit.name }}
+        <input
+          class="pt-input"
+          type="text"
+          autocomplete="organization"
+          [formField]="customerForm.name"
+          [attr.aria-invalid]="!!nameError()"
+          [attr.aria-describedby]="nameError() ? 'name-error' : null"
+        />
+      </label>
+    </div>
+    @if (nameError(); as message) {
+      <p class="pt-hint pt-hint--error" id="name-error">{{ message }}</p>
+    }
+
+    <div class="pt-card__divider logo-section">
+      <span class="pt-field">{{ t.customerEdit.logo }}</span>
+      <div
+        class="dropzone"
+        [class.dragging]="dragging()"
+        (dragover)="dragOver($event)"
+        (dragleave)="dragLeave($event)"
+        (drop)="dropLogo($event)"
+      >
+        <app-customer-badge [name]="badgeName()" [logo]="logo()" size="preview" />
+        <div class="logo-actions">
+          <p class="drop-hint">
+            <app-icon name="upload" [size]="16" />{{ t.customerEdit.dropHint }}
+          </p>
+          <div class="buttons">
+            <label class="pt-btn pt-btn--secondary upload">
+              {{ logo() ? t.customerEdit.replaceLogo : t.customerEdit.uploadLogo }}
+              <input
+                class="file"
+                type="file"
+                accept=".svg,.png,.jpg,.jpeg,image/svg+xml,image/png,image/jpeg"
+                (change)="pickLogo($event)"
+              />
+            </label>
+            <button type="button" class="pt-btn pt-btn--secondary" (click)="importDialog.open()">
+              {{ t.customerEdit.importLogo }}
+            </button>
+            @if (logo()) {
+              <button type="button" class="pt-btn pt-btn--danger" (click)="removeLogo()">
+                <app-icon name="trash" />{{ t.customerEdit.removeLogo }}
+              </button>
+            }
+          </div>
+          @if (logoError(); as problem) {
+            <p class="pt-hint pt-hint--error" role="alert">
+              {{ t.customerEdit.logoErrors[problem] }}
+            </p>
+          }
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <app-logo-import-dialog #importDialog [name]="badgeName()" (picked)="importLogo($event)" />
+}

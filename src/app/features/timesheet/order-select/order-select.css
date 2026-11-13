@@ -1,0 +1,137 @@
+:host {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+/* The closed control: project and order on one line, like an inline input until hovered. */
+.trigger {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-8);
+  padding: 0 var(--space-8);
+  cursor: pointer;
+  anchor-name: var(--anchor);
+}
+
+.trigger:focus-visible {
+  border-color: var(--primary);
+  background: var(--surface);
+  outline: none;
+  box-shadow: var(--shadow-focus-halo);
+}
+
+.trigger[aria-disabled='true'] {
+  border-color: transparent;
+  background: transparent;
+  cursor: default;
+}
+
+/* The project in bold, its order after it; both are cut short when the room runs out. */
+.names {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.project,
+.order {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project {
+  flex-shrink: 0.5;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.order {
+  color: var(--text-secondary);
+}
+
+/* The hint when nothing is picked; the page can set its look (a holiday's name, dark red and bold). */
+.placeholder {
+  color: var(--placeholder-color, var(--muted));
+  font-weight: var(--placeholder-weight, 400);
+}
+
+.chevron {
+  display: inline-flex;
+  color: var(--text-secondary);
+  transition: transform 0.15s;
+}
+
+.trigger[aria-expanded='true'] .chevron {
+  transform: rotate(180deg);
+}
+
+/*
+ * The open list floats under the control, at least as wide as it, above it when there is no
+ * room below. Fixed and anchored, so the table's rounded frame doesn't clip it.
+ */
+.list {
+  position: fixed;
+  position-anchor: var(--anchor);
+  top: anchor(bottom);
+  left: anchor(left);
+  min-width: anchor-size(width);
+  max-height: calc(var(--hit-target) * 8);
+  overflow-y: auto;
+  position-try-fallbacks: flip-block;
+  z-index: 10;
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-8);
+  box-shadow: var(--shadow-segment);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  min-height: var(--hit-target);
+  padding: 0 var(--space-8);
+  border-radius: var(--radius-6);
+  cursor: pointer;
+}
+
+.option:hover,
+.option[data-active='true'] {
+  background: var(--surface-sunken);
+}
+
+.option[aria-selected='true'] {
+  background: var(--primary-soft);
+}
+
+/* The thin line between the orders of one project and those of the next. */
+.divider {
+  height: 1px;
+  margin: var(--space-4) 0;
+  background: var(--border);
+}
+
+.customer {
+  flex: none;
+  margin-left: var(--space-16);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.none {
+  display: flex;
+  align-items: center;
+  min-height: var(--hit-target);
+  padding: 0 var(--space-8);
+  color: var(--muted);
+}

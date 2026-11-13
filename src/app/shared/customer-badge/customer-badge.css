@@ -1,0 +1,32 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Rows and page headers draw the badge at --customer-badge-size (app-level change). */
+:host(.pt-initials),
+:host(.pt-color-tile) {
+  width: var(--customer-badge-size);
+  height: var(--customer-badge-size);
+}
+
+:host(.pt-color-tile) {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+:host(.preview) {
+  width: calc(var(--hit-target) * 2);
+  height: calc(var(--hit-target) * 2);
+  border-radius: var(--radius-12);
+}
+
+/* A logo fills the whole tile, edge to edge. */
+img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

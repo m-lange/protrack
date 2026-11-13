@@ -1,0 +1,41 @@
+<div class="pt-page-head">
+  <h1 class="pt-page-title">{{ t.projects.title }}</h1>
+  @if (customers().length > 0) {
+    <div class="pt-page-head__actions">
+      <a class="pt-btn pt-btn--primary" routerLink="/projects/new">
+        <app-icon name="plus" />{{ t.projects.newProject }}
+      </a>
+    </div>
+  }
+</div>
+
+@if (customers().length === 0) {
+  <section class="pt-card" aria-labelledby="projects-empty">
+    <div class="pt-card__head">
+      <h2 class="pt-card__title" id="projects-empty">{{ t.projects.emptyTitle }}</h2>
+    </div>
+    <p class="pt-hint empty-hint">
+      {{ t.projects.emptyBefore }}<a routerLink="/customers">{{ t.projects.emptyLink }}</a
+      >{{ t.projects.emptyAfter }}
+    </p>
+  </section>
+} @else {
+  <nav class="pt-tabs" [attr.aria-label]="t.projects.tabsLabel">
+    <a
+      class="pt-tab"
+      routerLink="/projects"
+      routerLinkActive
+      [routerLinkActiveOptions]="{ exact: true }"
+      ariaCurrentWhenActive="page"
+    >
+      <app-icon name="projects" />{{ t.projects.tabProjects }}
+    </a>
+    <a class="pt-tab" routerLink="/projects/forecast" routerLinkActive ariaCurrentWhenActive="page">
+      <app-icon name="forecast" />{{ t.projects.tabForecast }}
+    </a>
+    <a class="pt-tab" routerLink="/projects/archive" routerLinkActive ariaCurrentWhenActive="page">
+      <app-icon name="archive" />{{ t.projects.tabArchive }}
+    </a>
+  </nav>
+  <router-outlet />
+}

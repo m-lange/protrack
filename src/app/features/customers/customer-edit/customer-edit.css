@@ -1,0 +1,103 @@
+:host {
+  display: contents;
+}
+
+.head {
+  align-items: center;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-width: 0;
+}
+
+/* The badge in the page head, framed like the cards below it. */
+.title app-customer-badge {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-12);
+}
+
+.save {
+  padding: 0 var(--space-20);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--space-16);
+}
+
+.name {
+  grid-column: span 2;
+}
+
+.logo-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+/* The drop zone: always framed, so it reads as a place to drop an image file. */
+.dropzone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-20);
+  padding: var(--space-20);
+  border: 1px dashed var(--border-dashed);
+  border-radius: var(--radius-12);
+  background: var(--surface-alt);
+}
+
+.dropzone.dragging {
+  border: 1px solid var(--primary);
+  background: var(--primary-soft);
+}
+
+.drop-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.drop-hint app-icon {
+  color: var(--primary);
+}
+
+.logo-actions {
+  display: flex;
+  flex: 1;
+  min-width: 240px;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.upload {
+  position: relative;
+  cursor: pointer;
+}
+
+/* The file input is visually hidden; its label is the button and shows the focus ring. */
+.upload:focus-within {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}

@@ -1,0 +1,88 @@
+:host {
+  display: contents;
+}
+
+/* A modal card: the native dialog only places it and dims the page behind it. */
+.dialog {
+  width: min(600px, calc(100vw - 2 * var(--space-16)));
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-12);
+  background: transparent;
+}
+
+.dialog::backdrop {
+  background: color-mix(in srgb, var(--ink) 40%, transparent);
+}
+
+/*
+ * Unlike the page's cards (only a rule on top, no side padding), the dialog is framed all round
+ * with room inside (user, 2026-11-10).
+ */
+.pt-card.frame {
+  border: 1px solid var(--border);
+  border-top: var(--rule);
+  padding: var(--space-20) var(--space-24);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+/* The note's box: the same frame and size whether it shows the text or renders it. */
+.box {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 200px;
+  max-height: 60vh;
+  padding: var(--space-10) var(--space-12);
+  line-height: 1.5;
+  overflow-y: auto;
+}
+
+/* The text in the page's font, not the browser's monospace for text areas. */
+.text {
+  height: auto;
+  resize: vertical;
+  font: inherit;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.rendered {
+  border: 1px solid var(--border-input);
+  background: var(--surface);
+  color: var(--text);
+  cursor: text;
+}
+
+.rendered:hover {
+  border-color: var(--border-dashed);
+}
+
+.rendered:focus-visible {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: var(--shadow-focus-halo);
+}
+
+.rendered.readonly {
+  background: var(--surface-alt);
+  cursor: default;
+}
+
+.empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-8);
+}

@@ -1,0 +1,87 @@
+:host {
+  position: relative;
+  display: flex;
+  /* Badges in the field and the list: small enough for a 44px control. */
+  --customer-badge-size: 28px;
+}
+
+/* The closed control looks like the select it replaces (TextField). */
+.trigger {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-10);
+  padding: 0 var(--space-16) 0 var(--space-8);
+  cursor: pointer;
+}
+
+.trigger:focus-visible {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: var(--shadow-focus-halo);
+}
+
+.trigger[aria-invalid='true'] {
+  border-color: var(--danger-text);
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.placeholder {
+  padding-left: var(--space-4);
+  color: var(--muted);
+}
+
+.chevron {
+  display: inline-flex;
+  color: var(--text-secondary);
+  transition: transform 0.15s;
+}
+
+.trigger[aria-expanded='true'] .chevron {
+  transform: rotate(180deg);
+}
+
+/* The open list floats under the control, as wide as it. */
+.list {
+  position: absolute;
+  top: calc(100% + var(--space-4));
+  left: 0;
+  right: 0;
+  z-index: 10;
+  max-height: calc(var(--hit-target) * 7);
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--space-4);
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-8);
+  box-shadow: var(--shadow-segment);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  min-height: var(--hit-target);
+  padding: 0 var(--space-8);
+  border-radius: var(--radius-6);
+  cursor: pointer;
+}
+
+.option:hover,
+.option[data-active='true'] {
+  background: var(--surface-sunken);
+}
+
+.option[aria-selected='true'] .name {
+  font-weight: 700;
+}

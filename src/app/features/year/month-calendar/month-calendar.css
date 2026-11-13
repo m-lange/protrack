@@ -1,0 +1,22 @@
+/*
+ * Each month looks like a table (user, 2026-11-07): the host is a pt-table frame, the month name
+ * sits in a pt-row--head header row, the days below it.
+ */
+:host {
+  display: block;
+  --pt-cols: 1fr;
+}
+
+.name {
+  color: inherit;
+  text-decoration: none;
+}
+
+.name:hover {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+.pt-cal {
+  padding: var(--space-12) var(--space-14) var(--space-14);
+}

@@ -1,0 +1,639 @@
+/* App-wide styles. The design system's styles load before this file (see angular.json). */
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+/*
+ * App-level adjustments to the design system, at the user's request (2026-11-06).
+ * Move them into the Pro.track design system when it is next updated.
+ */
+
+/*
+ * Font (user, 2026-11-10, look "Raster"): IBM Plex Sans for text, IBM Plex Mono for numbers,
+ * instead of the design system's Proxima Nova. Self-hosted from @fontsource-variable/ibm-plex-sans
+ * and @fontsource/ibm-plex-mono (loaded in angular.json), so the PWA works offline and needs no CDN.
+ */
+:root {
+  --font-sans: 'IBM Plex Sans Variable', 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+
+  /*
+   * Look "Raster" (user, 2026-11-10; replaces "Ozean"): square and exact, on white. The accent
+   * is a dark slate, #28333E (user, 2026-11-10, instead of black): card titles, the rules, the
+   * open page in the side nav, primary buttons, burn bars. Text stays black. The logo, favicon,
+   * app icons and page titles keep the old blue (--brand-blue).
+   * Color is kept for data: the blue of chargeable days (src/categories.css), the work
+   * locations, the against-target colors and the forecast columns.
+   * Contrast: white on --primary 12.6:1, --muted on white 6.7:1, --table-subtle on white 5.4:1.
+   */
+  --primary: #28333e;
+  --primary-divider: #6b7682;
+  --primary-soft: #e8ebee;
+  /* Links are text: black. */
+  --link: #0a0a0a;
+  --link-hover: #3d3d3d;
+  /* Focus stays visible on black buttons and white fields: a light data blue. */
+  --focus-halo: #9db3ec;
+  --shadow-focus-halo: 0 0 0 2px #9db3ec;
+
+  --ink: #0a0a0a;
+  --text: #1a1a1a;
+  --text-secondary: #3d3d3d;
+  --muted: #5c5c5c;
+
+  /* White page, warm light greys for raised and sunken areas. */
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-alt: #f6f6f4;
+  --surface-sunken: #ececea;
+  --track: #ececea;
+  --border: #d9d9d6;
+  --border-subtle: #ececea;
+  --border-input: #a8a8a3;
+  --border-hover: #c4c4c0;
+  --border-dashed: #8f8f8a;
+
+  /* The rule in the accent on top of cards and tables, and under the top bar. */
+  --rule: 2px solid var(--primary);
+  /* Today's day in My year: framed in the accent. */
+  --shadow-today: inset 0 0 0 2px #28333e;
+  --title-tracking: 0.06em;
+
+  /* No rounded corners. Circles (order rings, swatches) stay round in their own rules. */
+  --radius-3: 0;
+  --radius-4: 0;
+  --radius-5: 0;
+  --radius-6: 0;
+  --radius-7: 0;
+  --radius-8: 0;
+  --radius-9: 0;
+  --radius-10: 0;
+  --radius-12: 0;
+  --radius-13: 0;
+
+  /* Day and month columns (TimeGrid): the forecast in a light data blue, past and weekend days grey. */
+  --cell-actual: #f1f1ef;
+  --cell-forecast: #f5f7fd;
+  --cell-forecast-head: #e2e9fb;
+  --cell-forecast-head-text: #1f3f99;
+  --cell-forecast-edge: #b7c8f2;
+
+  /* App name next to the logo. */
+  --brand-name-color: #000;
+  /*
+   * The old "Ozean" blue for the logo tile, the favicon and app icons, and the page titles
+   * (user, 2026-11-10). 4.9:1 on white.
+   */
+  --brand-blue: #1f6fd1;
+
+  /* Text buttons, a little flatter than control-height. Icon-only buttons keep hit-target. */
+  --button-height: 40px;
+
+  /*
+   * Tree table indents (2026-11-07): an order's circle sits exactly under its project's square.
+   * The project's square follows its toggle (cell-input) and the cell gap (space-8).
+   */
+  --indent-project: 40px;
+  --indent-order: calc(var(--indent-project) + var(--cell-input) + var(--space-8));
+
+  /*
+   * Side navigation (2026-11-07): open 261px, wider than the design system's 232px for the
+   * collapse button beside Home; collapsed, one hit-target icon between the nav's padding.
+   */
+  --sidebar-width: 261px;
+  --sidebar-width-collapsed: calc(var(--hit-target) + 2 * var(--space-12));
+  /* The page content stops growing here on very wide screens (user, 2026-11-10). */
+  --page-max-width: 1600px;
+
+  /* Customer logos and initials in rows and page headers. */
+  --customer-badge-size: 48px;
+
+  /* Mid grey for action icons and meta text in tables (5.4:1 on white, readable as text). */
+  --table-subtle: #6b6b66;
+  /*
+   * Action icons that can't be used right now (user, 2026-11-10: lighter, so they stand apart
+   * from the usable ones at a glance). Decorative contrast only: their title says why.
+   */
+  --toggle-disabled: #d0d0cc;
+
+  /*
+   * Against-target colors (2026-11-07): met, near and below the target in the KPI tiles on Home
+   * and the delta chips of Forecast and Timesheet. The design system's green and red merge for
+   * red-green colour vision deficiency (ΔE 2.9); this teal green and red stay apart (ΔE 9.2) and
+   * still read as green, yellow and red. Ink text keeps at least 4.5:1 on each.
+   * 2026-11-08 (user): the green lighter, #14a38b → #4cc9ad (ink 7.8:1, simulated deutan/protan
+   * distance to the red as large as before or larger).
+   * 2026-11-08 (user): "Smaragd" #5ccf9a, greener with less blue (ink 8.3:1; OKLab ΔE to the
+   * nearer of orange and red: 20.3 normal, 10.7 simulated deutan, 12.9 protan).
+   */
+  --delta-plus: #5ccf9a;
+  --delta-minus: #f0a020;
+  --delta-minus-strong: #ee5a5f;
+
+  /* The backup status: saved (green), changes not in the file yet (blue), a problem (red). */
+  --backup-ok-bg: var(--check-ok-bg);
+  --backup-ok-text: var(--check-ok-text);
+  --backup-pending-bg: var(--status-active-bg);
+  --backup-pending-text: var(--status-active-text);
+  --backup-error-bg: var(--holiday-bg);
+  --backup-error-text: var(--danger-text);
+
+  /*
+   * Σ columns: the folded months in the Forecast (2026-11-08), so the sums stand apart from the
+   * single months. Drawn by .sum-cell.
+   */
+  --cell-sum: #e6e6e3;
+  --cell-sum-text: var(--ink);
+
+  /* My timesheet: weekends and public holidays, and today's day cell with its bar. */
+  --timesheet-off: var(--cell-actual);
+  --timesheet-today: var(--cell-forecast-head);
+  --timesheet-today-text: var(--cell-forecast-head-text);
+  --timesheet-accent: var(--primary);
+
+  /* The few sizes that differ from the 14px body text. */
+  --page-title-size: 18px;
+  /* Card titles are set in capitals with tracking (Raster), so they keep the body size. */
+  --heading-size: 14px;
+  --brand-name-size: 20px;
+  /* The headline numbers of the KPI tiles on Home, as the design system's text-kpi. */
+  --kpi-value-size: 30px;
+
+  /*
+   * The month grid of My year: a month grows up to --month-max, with --month-gap between the
+   * months. Home is as wide as the grid at its widest, --year-width (user, 2026-11-07).
+   */
+  --month-max: 320px;
+  --month-gap: var(--space-18);
+  --year-width: calc(4 * var(--month-max) + 3 * var(--month-gap));
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+/*
+ * Scrollbars (2026-11-07): thin and barely visible, no track. Over the area the pointer is in,
+ * the thumb gets a little stronger so it can still be found and dragged.
+ */
+:root {
+  --scrollbar-thumb: color-mix(in srgb, var(--ink) 10%, transparent);
+  --scrollbar-thumb-hover: color-mix(in srgb, var(--ink) 24%, transparent);
+}
+
+/* scrollbar-color is inherited, scrollbar-width is not. */
+html {
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+html,
+.pt-app * {
+  scrollbar-width: thin;
+}
+
+.pt-app :hover {
+  scrollbar-color: var(--scrollbar-thumb-hover) transparent;
+}
+
+/*
+ * One text size for everything: every element is 1em, so all text has the body size.
+ * The !important overrides the sizes in the design system's component styles.
+ */
+.pt-app *,
+.pt-app *::before,
+.pt-app *::after {
+  font-size: 1em !important;
+}
+
+/*
+ * Exceptions to the one text size: page titles (18px), card titles (--heading-size), the app
+ * name (20px), the KPI numbers (30px).
+ * Headings are drawn in the accent color.
+ */
+.pt-app .pt-page-title,
+.pt-app .pt-card__title {
+  color: var(--primary);
+}
+
+.pt-app .pt-page-title {
+  font-size: var(--page-title-size) !important;
+  color: var(--brand-blue);
+}
+
+/* The logo tile in the brand blue, like the favicon and app icons. */
+.pt-app .pt-brand__mark {
+  background: var(--brand-blue);
+}
+
+.pt-app .pt-card__title {
+  font-size: var(--heading-size) !important;
+}
+
+.pt-app .pt-brand__name {
+  color: var(--brand-name-color);
+  font-size: var(--brand-name-size) !important;
+}
+
+.pt-app .pt-kpi__value {
+  font-size: var(--kpi-value-size) !important;
+}
+
+/*
+ * Inputs and selects inherit the font of their label (bundle.css: font: inherit), which is
+ * bold in .pt-field. Their own text stays regular.
+ */
+.pt-app .pt-input {
+  font-weight: 400;
+}
+
+/*
+ * Selects: wrap them in .pt-select with a chevron-down app-icon after the select. The icon
+ * replaces the native arrow and keeps more room to the border.
+ */
+.pt-select {
+  position: relative;
+  display: flex;
+}
+
+.pt-select select.pt-input {
+  flex: 1;
+  appearance: none;
+  padding-right: calc(var(--space-16) * 2 + var(--space-8));
+}
+
+.pt-select app-icon {
+  position: absolute;
+  top: 50%;
+  right: var(--space-16);
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+/* Chips: 1px more room above and below the text than in the design system. */
+.pt-app .pt-chip {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.pt-app .pt-chip--status {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+/*
+ * The order circle as large as the project square (12px instead of 13px with its border), so
+ * both share one center line.
+ */
+.pt-app .pt-ring {
+  box-sizing: border-box;
+  /* Round, although every other corner is square (Raster): circle = order, square = project. */
+  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+}
+
+/* Action icons and meta text in tables in mid grey. */
+.pt-app .pt-table .pt-toggle,
+.pt-app .pt-table .pt-cell__meta {
+  color: var(--table-subtle);
+}
+
+/*
+ * Tree tables: customer, project and order rows in My projects, its Forecast and My timesheet.
+ * Same specificity as the component rules they replaced, so page rules still win ties.
+ */
+.tree-table {
+  /* Customer logos and initials: 32px, so customer rows keep their row height. */
+  --customer-badge-size: 32px;
+}
+
+/* Indents by level: customer, project, order (TreeTable README). */
+.tree-table .pt-row--customer .pt-cell--name {
+  --indent: var(--space-8);
+}
+
+.tree-table .project-name {
+  --indent: var(--indent-project);
+}
+
+.tree-table .order-name {
+  --indent: var(--indent-order);
+}
+
+/* The labels of the totals rows below the tree. */
+.tree-table .total-label {
+  padding-left: var(--space-14);
+  color: var(--muted);
+}
+
+/* Day and month cells are divided by thin lines, like the other cells of the table. */
+.tree-table .pt-time-head,
+.tree-table .pt-time-cell {
+  border-right: 1px solid var(--border);
+}
+
+/* Days or months outside an order's timeline: the input stays visible but can't take days. */
+.tree-table .pt-grid-input:disabled {
+  border-color: var(--border);
+  background: transparent;
+  cursor: not-allowed;
+}
+
+.tree-table .pt-grid-input:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: var(--shadow-focus-halo);
+}
+
+/* A Σ column's head and cells (see --cell-sum). */
+.pt-app .sum-cell {
+  background: var(--cell-sum);
+  color: var(--cell-sum-text);
+  font-weight: 600;
+}
+
+/* Expand/collapse chevrons (tree rows, group heads) are drawn heavier than other icons. */
+.pt-app [aria-expanded] > app-icon svg {
+  stroke-width: 2;
+}
+
+/* More room below the page title: to its subtitle and to the page content. */
+.pt-app .pt-page-sub {
+  margin-top: var(--space-8);
+}
+
+.pt-page-head {
+  margin-bottom: var(--space-8);
+}
+
+/*
+ * Links styled as buttons (Cancel in a project, New project) as tall as real buttons: the design
+ * system's `.pt-app a.pt-btn` outranks a plain `.pt-app .pt-btn`, so both are named here. The
+ * border of secondary buttons counts into the height.
+ */
+.pt-app .pt-btn,
+.pt-app a.pt-btn {
+  box-sizing: border-box;
+  height: var(--button-height);
+}
+
+/*
+ * One weight for all buttons (user, 2026-11-10): real buttons inherit the regular text weight
+ * (bundle.css: font: inherit), links styled as buttons took the design system's bold. Both are
+ * regular now; "This year" and "This month" keep their own bold.
+ */
+.pt-app a.pt-btn:not(.pt-btn--link) {
+  font-weight: 400;
+}
+
+/*
+ * Unavailable buttons (user, 2026-11-08): the design system has no disabled style, so they
+ * looked clickable. Greyed out, with the title that says why still on hover. Link buttons such
+ * as "This year" keep their look.
+ */
+.pt-app .pt-btn:disabled:not(.pt-btn--link) {
+  border-color: var(--border);
+  background: var(--surface-sunken);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+/* More room between stacked cards: the page gap (space-16) plus space-8 makes space-24. */
+.pt-card + .pt-card {
+  margin-top: var(--space-8);
+}
+
+/*
+ * Page layout, at the user's request (2026-11-07):
+ * - All cards of a page are equally wide: the page content is as wide as its widest table (its
+ *   min-width), at least the page width, and every card stretches to it.
+ * - Tables no longer scroll inside their card (the design system's TreeTable does). When the
+ *   content is wider than the window, the page scrolls sideways as a whole.
+ * - On wide screens the top bar and side nav stay put and only the page scrolls, so its
+ *   horizontal scrollbar is always at the bottom of the window. Narrow screens scroll the whole
+ *   document, whose scrollbar is at the bottom of the window too.
+ */
+/*
+ * On very wide screens the page content stops at --page-max-width, centered in the room beside
+ * the side nav (user, 2026-11-10); the top bar still spans the window. Content wider than that
+ * (a long forecast) still widens the page and scrolls with it.
+ */
+.page-frame {
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+}
+
+.page-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  width: fit-content;
+  min-width: 100%;
+}
+
+.pt-app .pt-page {
+  display: block;
+}
+
+/* Clips the rows to the rounded frame without making the table a scroll container. */
+.pt-app .pt-table {
+  overflow: clip;
+}
+
+@media (min-width: 800px) {
+  .pt-app .pt-shell {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .pt-app .pt-shell__body {
+    min-height: 0;
+    flex-wrap: nowrap;
+  }
+
+  .pt-app .pt-shell__side {
+    flex: none;
+    width: var(--sidebar-width);
+    overflow-y: auto;
+  }
+
+  .pt-app .pt-page {
+    flex: 1;
+    min-width: 0;
+    overflow: auto;
+  }
+}
+
+/*
+ * Look "Raster" (user, 2026-11-10): what the tokens above can't express on their own.
+ * Black rules instead of frames, titles in capitals, numbers in IBM Plex Mono.
+ */
+
+/* Page and card titles and the KPI labels: capitals with a little tracking. */
+.pt-app .pt-page-title,
+.pt-app .pt-card__title,
+.pt-app .pt-kpi__label {
+  font-weight: 600;
+  letter-spacing: var(--title-tracking);
+  text-transform: uppercase;
+}
+
+/* The top bar ends in a black rule. */
+.pt-app .pt-topbar {
+  border-bottom: var(--rule);
+}
+
+/* The open page and month in the side navigation: black with white text. */
+.pt-app a.pt-nav__item[aria-current='page'],
+.pt-app a.pt-nav__month[aria-current='page'] {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+/* Cards have no frame: a black rule on top, the content flush with the page column. */
+.pt-app .pt-card {
+  border: 0;
+  border-top: var(--rule);
+  padding-inline: 0;
+}
+
+/* Tables (and the months of My year): a black rule on top, no side frame. */
+.pt-app .pt-table {
+  border: 0;
+  border-top: var(--rule);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Inside a card the card's rule is enough. */
+.pt-app .pt-card .pt-table {
+  border-top: 1px solid var(--border);
+}
+
+/*
+ * Numbers in IBM Plex Mono: KPIs, the number and day/month cells of table rows (not their
+ * headers), grid inputs, chart labels, calendar days and the year in the top bar.
+ */
+.pt-app .pt-kpi__value,
+.pt-app .pt-num,
+.pt-app .pt-row:not(.pt-row--head) .pt-cell--num,
+.pt-app .pt-row:not(.pt-row--head) .pt-time-cell,
+.pt-app .pt-grid-input,
+.pt-app .pt-burn__value,
+.pt-app .pt-bar__label,
+.pt-app .pt-day,
+.pt-app app-year-switcher .pt-stepper__value {
+  font-family: var(--font-mono);
+}
+
+/* Target lines in the charts and their legend in the accent, not black (text only is black). */
+.pt-app .pt-target-line,
+.pt-app .pt-legend__line {
+  border-top-color: var(--primary);
+}
+
+/* Square swatches and inline chips, like every other corner. */
+.pt-app .pt-swatch,
+.pt-app .pt-swatch__color,
+.pt-app .pt-swatch-add,
+.pt-app .pt-inline--chip {
+  border-radius: 0;
+}
+
+/*
+ * Rendered Markdown (notes in My timesheet). Global, because [innerHTML] content gets no
+ * component style attributes. Quiet spacing, all in the body size; the first line sits where
+ * the text field's first line does.
+ */
+.pt-markdown > :first-child {
+  margin-top: 0;
+}
+
+.pt-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.pt-markdown :is(p, ul, ol, pre, blockquote, h1, h2, h3, h4, h5, h6) {
+  margin: 0 0 var(--space-8);
+}
+
+.pt-markdown :is(h1, h2, h3, h4, h5, h6) {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.pt-markdown :is(ul, ol) {
+  padding-left: var(--space-20);
+}
+
+.pt-markdown li > :is(ul, ol) {
+  margin-bottom: 0;
+}
+
+.pt-markdown code {
+  padding: 0 var(--space-4);
+  background: var(--surface-sunken);
+  font-family: var(--font-mono);
+}
+
+.pt-markdown pre {
+  padding: var(--space-8);
+  background: var(--surface-sunken);
+  overflow-x: auto;
+}
+
+.pt-markdown pre code {
+  padding: 0;
+}
+
+.pt-markdown blockquote {
+  padding-left: var(--space-12);
+  border-left: 3px solid var(--border-input);
+  color: var(--text-secondary);
+}
+
+.pt-markdown a {
+  color: var(--link);
+}
+
+/*
+ * Deleting (user, 2026-11-10): one look for every delete, remove and unlink action instead of a
+ * mix of text links and buttons. The action is a framed button like a secondary one, in the
+ * danger color; its confirmation, the step that really deletes, is filled (`danger-fill`).
+ * Disabled, it greys out like any other button (rule above).
+ */
+.pt-app .pt-btn--danger {
+  padding: 0 var(--space-18);
+  border: 1px solid var(--danger-text);
+  background: var(--surface);
+  color: var(--danger-text);
+}
+
+.pt-app .pt-btn--danger.danger-fill {
+  background: var(--danger-text);
+  color: var(--on-primary);
+}
+
+/*
+ * A page's actions and the confirmation of a delete in the same place (customer and project
+ * pages): both rows lie on top of each other, starting at the same left edge, so Keep takes the
+ * exact place of Delete. The row not in use stays invisible, out of reach of mouse and keyboard.
+ */
+.pt-app .delete-states {
+  display: grid;
+}
+
+.delete-states > .state {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.delete-states > .state.inactive {
+  visibility: hidden;
+}

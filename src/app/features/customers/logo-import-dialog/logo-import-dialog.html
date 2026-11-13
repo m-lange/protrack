@@ -1,0 +1,68 @@
+<dialog #dialog class="dialog" aria-labelledby="logo-import-title">
+  <div class="pt-card pt-card--form">
+    <div class="head">
+      <h2 class="pt-card__title" id="logo-import-title">{{ t.logoImport.title }}</h2>
+      <button
+        type="button"
+        class="pt-icon-btn"
+        [attr.aria-label]="t.logoImport.close"
+        (click)="close()"
+      >
+        <app-icon name="close" [size]="20" />
+      </button>
+    </div>
+    <p class="pt-hint">{{ t.logoImport.intro }}</p>
+
+    <form class="lookup" [formRoot]="lookupForm">
+      <label class="pt-field website">
+        {{ t.logoImport.website }}
+        <input
+          class="pt-input"
+          type="text"
+          inputmode="url"
+          autocomplete="url"
+          [placeholder]="t.logoImport.placeholder"
+          [formField]="lookupForm.website"
+          [attr.aria-invalid]="!!addressError()"
+          [attr.aria-describedby]="addressError() ? 'website-error' : null"
+        />
+      </label>
+      <button type="submit" class="pt-btn pt-btn--secondary" [disabled]="finding()">
+        {{ t.logoImport.find }}
+      </button>
+    </form>
+    @if (addressError(); as message) {
+      <p class="pt-hint pt-hint--error" id="website-error">{{ message }}</p>
+    }
+
+    <div class="result" aria-live="polite">
+      @if (finding()) {
+        <p class="pt-hint">{{ t.logoImport.finding }}</p>
+      } @else if (problem(); as message) {
+        <p class="pt-hint pt-hint--error">{{ message }}</p>
+      } @else if (icon(); as icon) {
+        <div class="preview">
+          <app-customer-badge [name]="name()" [logo]="icon" size="preview" />
+          <div class="preview-text">
+            @if (size(); as size) {
+              <p class="pt-hint size">{{ t.logoImport.size(size.width, size.height) }}</p>
+              @if (size.width < sharpWidth) {
+                <p class="pt-hint">{{ t.logoImport.smallIcon }}</p>
+              }
+            }
+            <p class="pt-hint">{{ t.logoImport.previewHint }}</p>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="actions">
+      <button type="button" class="pt-btn pt-btn--secondary" (click)="close()">
+        {{ t.common.cancel }}
+      </button>
+      <button type="button" class="pt-btn pt-btn--primary" [disabled]="!icon()" (click)="use()">
+        {{ t.logoImport.use }}
+      </button>
+    </div>
+  </div>
+</dialog>

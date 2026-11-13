@@ -1,0 +1,66 @@
+:host {
+  display: block;
+}
+
+.budgets {
+  margin-top: var(--space-14);
+}
+
+/* Project | budget bar | booked | budget | remaining. */
+.budgets__row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.2fr) minmax(160px, 2fr) 84px 84px 96px;
+  align-items: center;
+  gap: var(--space-16);
+  min-height: 44px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.budgets__row:last-child {
+  border-bottom: 0;
+}
+
+.budgets__head {
+  min-height: 32px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.budgets__name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
+.budgets__dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--row-color);
+}
+
+.budgets__project {
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.budgets__customer {
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.empty {
+  margin-top: var(--space-8);
+}

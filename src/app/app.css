@@ -1,0 +1,29 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+/* A new version is ready: a band under the top bar, in the soft accent. */
+.update {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-6) var(--space-24);
+  border-bottom: 1px solid var(--border);
+  background: var(--primary-soft);
+  color: var(--link);
+  font-weight: 700;
+}
+
+/* The data couldn't be loaded: the same band, in the danger color, as nothing may be typed now. */
+.update.load-failed {
+  background: var(--surface);
+  color: var(--danger-text);
+}
+
+/* The collapsed side navigation: as wide as its icons (styles.css sizes the column). */
+.pt-shell__side.collapsed {
+  --sidebar-width: var(--sidebar-width-collapsed);
+}

@@ -1,0 +1,17 @@
+:host {
+  display: contents;
+}
+
+/*
+ * The twelve months, always four per row, straight on the page without a card (user,
+ * 2026-11-07). Between them --month-gap, the space a card keeps to its frame (space-18). A month
+ * grows up to --month-max (both in src/styles.css, shared with Home); wider pages keep the
+ * rest free on the right, narrower ones scroll sideways.
+ */
+.months {
+  --month-min: 236px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(var(--month-min), var(--month-max)));
+  justify-content: start;
+  gap: var(--month-gap);
+}

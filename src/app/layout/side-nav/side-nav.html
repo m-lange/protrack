@@ -1,0 +1,59 @@
+<nav class="pt-nav" [attr.aria-label]="t.nav.label">
+  <!-- Home with the collapse button at its right; collapsed, the button sits above Home. -->
+  <div class="first">
+    <ng-container [ngTemplateOutlet]="page" [ngTemplateOutletContext]="{ $implicit: home }" />
+    @let toggleLabel = collapsed() ? t.nav.expand : t.nav.collapse;
+    <button
+      type="button"
+      class="pt-icon-btn toggle"
+      [attr.aria-label]="toggleLabel"
+      [attr.title]="toggleLabel"
+      (click)="sidebar.toggle()"
+    >
+      <app-icon [name]="collapsed() ? 'sidebar-expand' : 'chevron-left'" [size]="18" />
+    </button>
+  </div>
+  @for (item of items; track item.link) {
+    <ng-container [ngTemplateOutlet]="page" [ngTemplateOutletContext]="{ $implicit: item }" />
+  }
+  <!-- Expanded, the open month carries aria-current and My timesheet is only "open"; collapsed,
+       the months are hidden, so My timesheet itself is the open page (user, 2026-11-11). -->
+  <a
+    class="pt-nav__item"
+    routerLink="/timesheet"
+    routerLinkActive="pt-nav__item--open"
+    [ariaCurrentWhenActive]="collapsed() ? 'page' : undefined"
+    [attr.title]="collapsed() ? t.nav.timesheet : null"
+  >
+    <app-icon name="timesheet" [size]="18" /><span class="label">{{ t.nav.timesheet }}</span>
+  </a>
+  @if (!collapsed()) {
+    <div class="pt-nav__sub">
+      @for (month of months(); track month.number) {
+        <a
+          class="pt-nav__month"
+          [class.pt-nav__month--now]="month.isNow"
+          [class.pt-nav__month--future]="month.isFuture"
+          [routerLink]="['/timesheet', year(), month.number]"
+          routerLinkActive
+          ariaCurrentWhenActive="page"
+          >{{ month.name }}</a
+        >
+      }
+    </div>
+  }
+</nav>
+
+<!-- A page of the navigation; collapsed, its label is a tooltip and stays for screen readers. -->
+<ng-template #page let-item>
+  <a
+    class="pt-nav__item"
+    [routerLink]="item.link"
+    routerLinkActive
+    [routerLinkActiveOptions]="{ exact: item.link === '/' }"
+    ariaCurrentWhenActive="page"
+    [attr.title]="collapsed() ? item.label : null"
+  >
+    <app-icon [name]="item.icon" [size]="18" /><span class="label">{{ item.label }}</span>
+  </a>
+</ng-template>

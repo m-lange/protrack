@@ -1,0 +1,27 @@
+<div class="pt-stepper">
+  <button
+    type="button"
+    class="pt-stepper__btn"
+    [attr.aria-label]="t.nav.previousYear"
+    (click)="previous.emit()"
+  >
+    <app-icon name="chevron-left" [size]="16" />
+  </button>
+  <span class="pt-stepper__value" aria-live="polite">{{ year() }}</span>
+  <button
+    type="button"
+    class="pt-stepper__btn"
+    [attr.aria-label]="t.nav.nextYear"
+    (click)="next.emit()"
+  >
+    <app-icon name="chevron-right" [size]="16" />
+  </button>
+</div>
+<button
+  type="button"
+  class="pt-btn pt-btn--link"
+  [disabled]="year() === currentYear()"
+  (click)="thisYear.emit()"
+>
+  {{ t.nav.thisYear }}
+</button>

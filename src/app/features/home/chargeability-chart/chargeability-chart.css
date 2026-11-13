@@ -1,0 +1,23 @@
+/* The grid and the target label: ../chart-grid.css, shared with the location charts. */
+:host {
+  display: block;
+  --plot-h: 220px;
+  /* The booked color comes from src/categories.css; the forecast is a lighter shade of it. */
+  --bar-forecast-color: color-mix(in srgb, var(--bar-color) 40%, var(--surface));
+}
+
+.pt-bar__mark {
+  background: var(--bar-color);
+}
+
+.pt-bar__mark--forecast {
+  background: var(--bar-forecast-color);
+}
+
+.swatch-booked {
+  --swatch-color: var(--bar-color);
+}
+
+.swatch-forecast {
+  --swatch-color: var(--bar-forecast-color);
+}

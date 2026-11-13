@@ -1,0 +1,39 @@
+<div
+  ngCombobox
+  #combobox="ngCombobox"
+  class="pt-input trigger"
+  [(expanded)]="expanded"
+  [disabled]="disabled()"
+  [attr.aria-label]="label() || null"
+  [attr.aria-invalid]="invalid()"
+  [attr.aria-describedby]="describedBy()"
+  (focusout)="touch.emit()"
+>
+  @if (selected(); as customer) {
+    <app-customer-badge [name]="customer.name" [logo]="customer.logo" />
+    <span class="name">{{ customer.name }}</span>
+  } @else {
+    <span class="name placeholder">{{ placeholder() }}</span>
+  }
+  <app-icon class="chevron" name="chevron-down" />
+</div>
+
+<ng-template ngComboboxPopup [combobox]="combobox">
+  <ul
+    ngComboboxWidget
+    ngListbox
+    #listbox="ngListbox"
+    class="list"
+    selectionMode="explicit"
+    [value]="selection()"
+    [activeDescendant]="listbox.activeDescendant()"
+    (valueChange)="pick($event)"
+  >
+    @for (customer of customers(); track customer.id) {
+      <li ngOption class="option" [value]="customer.id" [label]="customer.name">
+        <app-customer-badge [name]="customer.name" [logo]="customer.logo" />
+        <span class="name">{{ customer.name }}</span>
+      </li>
+    }
+  </ul>
+</ng-template>

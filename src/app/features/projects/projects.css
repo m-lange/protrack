@@ -1,0 +1,12 @@
+:host {
+  display: contents;
+}
+
+.empty-hint {
+  margin-top: var(--space-8);
+}
+
+/* The outlet is only a marker; the open tab follows it as a page section of its own. */
+router-outlet {
+  display: none;
+}

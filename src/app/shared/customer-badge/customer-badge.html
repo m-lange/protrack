@@ -1,0 +1,5 @@
+@if (logo(); as logo) {
+  <img [src]="logo" alt="" />
+} @else {
+  <span aria-hidden="true">{{ initials() }}</span>
+}

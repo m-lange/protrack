@@ -1,0 +1,341 @@
+<!--
+  Customers collapse together with the Projects tab: their keys use its scope ('active').
+-->
+@let customerRows = rows();
+@if (customerRows.length === 0) {
+  <section class="pt-card">
+    <p class="pt-hint">{{ t.forecast.emptyYear(year()) }}</p>
+  </section>
+} @else {
+  <div class="pt-table tree-table">
+    <div
+      class="pt-table__grid"
+      role="table"
+      [style.--month-count]="columns().length"
+      [attr.aria-label]="t.forecast.tableLabel(year())"
+    >
+      <div class="pt-row pt-row--head" role="row">
+        <span role="presentation"></span>
+        <span class="pt-cell" role="columnheader">{{ t.projects.columns.name }}</span>
+        @for (month of columns(); track month.key) {
+          <span
+            class="pt-time-head"
+            role="columnheader"
+            [class.pt-time-head--actual]="month.actual"
+            [class.pt-time-head--forecast]="!month.actual"
+            [class.pt-time-head--current]="month.current"
+            [class.sum-cell]="month.folded"
+            [attr.aria-label]="month.name"
+          >
+            @if (month.toggleLabel; as label) {
+              <!--
+                    A folded column shows only its expand chevron. A month shows its name, and on
+                    hover the fold chevron in its place.
+                  -->
+              <button
+                type="button"
+                class="fold"
+                [class.fold--month]="!month.folded"
+                [attr.aria-label]="label"
+                [attr.title]="label"
+                (click)="tree.foldThrough(month.folded ? null : month.to)"
+              >
+                @if (!month.folded) {
+                  <span class="fold__name">{{ month.short }}</span>
+                }
+                <app-icon [name]="month.folded ? 'chevron-right' : 'chevron-left'" [size]="14" />
+              </button>
+            } @else {
+              {{ month.short }}
+            }
+          </span>
+        }
+        <span class="pt-cell pt-cell--center" role="columnheader">{{ t.forecast.total }}</span>
+        <span class="pt-cell pt-cell--center" role="columnheader">{{ t.forecast.budget }}</span>
+        <span
+          class="pt-cell pt-cell--center"
+          role="columnheader"
+          [attr.title]="t.forecast.deltaHint"
+          >{{ t.forecast.remaining }}</span
+        >
+      </div>
+
+      @for (customerRow of customerRows; track customerRow.node.customer.id) {
+        @let customer = customerRow.node.customer;
+        @let customerOpen = !tree.isCollapsed(customerKey('active', customer.id));
+        <div class="pt-row pt-row--customer" role="row">
+          <span class="pt-stripe" role="presentation"></span>
+          <span class="pt-cell pt-cell--name" role="cell">
+            <button
+              type="button"
+              class="pt-toggle"
+              [attr.aria-label]="
+                customerOpen ? t.projects.collapse(customer.name) : t.projects.expand(customer.name)
+              "
+              [attr.aria-expanded]="customerOpen"
+              (click)="tree.toggle(customerKey('active', customer.id))"
+            >
+              <app-icon name="chevron-down" />
+            </button>
+            <app-customer-badge [name]="customer.name" [logo]="customer.logo" />
+            <span class="pt-cell__text">{{ customer.name }}</span>
+            <span class="pt-cell__meta">{{
+              t.common.projectCount(customerRow.projects.length)
+            }}</span>
+          </span>
+          <ng-container
+            [ngTemplateOutlet]="sums"
+            [ngTemplateOutletContext]="{ $implicit: customerRow.figures }"
+          />
+        </div>
+
+        @if (customerOpen) {
+          @for (projectRow of customerRow.projects; track projectRow.project.id) {
+            @let project = projectRow.project;
+            @let projectOpen = !tree.isCollapsed(projectKey(project.id));
+            <!--
+              An open-booking project has no orders to show (user, 2026-11-10): its row takes the
+              plans of its one order.
+            -->
+            @let open = openOrder(project);
+            <div class="pt-row pt-row--project" role="row" [style.--row-color]="projectRow.color">
+              <span class="pt-stripe" role="presentation"></span>
+              <span class="pt-cell pt-cell--name project-name" role="cell">
+                @if (open) {
+                  <span class="toggle-space"></span>
+                } @else {
+                  <button
+                    type="button"
+                    class="pt-toggle"
+                    [attr.aria-label]="
+                      projectOpen
+                        ? t.projects.collapse(project.name)
+                        : t.projects.expand(project.name)
+                    "
+                    [attr.aria-expanded]="projectOpen"
+                    (click)="tree.toggle(projectKey(project.id))"
+                  >
+                    <app-icon name="chevron-down" />
+                  </button>
+                }
+                <span class="pt-dot"></span>
+                <span class="pt-cell__text">{{ project.name }}</span>
+              </span>
+              @if (open) {
+                <ng-container
+                  [ngTemplateOutlet]="plans"
+                  [ngTemplateOutletContext]="{ $implicit: projectRow.orders[0], project }"
+                />
+              } @else {
+                <ng-container
+                  [ngTemplateOutlet]="sums"
+                  [ngTemplateOutletContext]="{ $implicit: projectRow.figures }"
+                />
+              }
+            </div>
+
+            @if (projectOpen && !open) {
+              @for (orderRow of projectRow.orders; track orderRow.order.id) {
+                @let order = orderRow.order;
+                @let timeline = timelineOf(order);
+                <div class="pt-row pt-row--order" role="row" [style.--row-color]="projectRow.color">
+                  <span class="pt-stripe" role="presentation"></span>
+                  <span class="pt-cell pt-cell--name order-name" role="cell">
+                    <span class="pt-ring"></span>
+                    <span
+                      class="pt-cell__text"
+                      [attr.title]="timeline ? (timeline | dateRange: true) : null"
+                      >{{ order.name }}</span
+                    >
+                  </span>
+                  <ng-container
+                    [ngTemplateOutlet]="plans"
+                    [ngTemplateOutletContext]="{ $implicit: orderRow, project }"
+                  />
+                </div>
+              }
+            }
+          }
+        }
+      }
+      <!--
+              Over all projects: the days per month (actuals, then forecast), the working days,
+              and chargeability as a badge per month and for the year.
+            -->
+      @let charge = chargeability();
+      <div class="pt-row pt-row--total" role="row">
+        <span role="presentation"></span>
+        <span class="pt-cell total-label" role="rowheader" [attr.title]="t.forecast.daysHint">{{
+          t.forecast.days
+        }}</span>
+        @for (month of columns(); track month.key; let i = $index) {
+          <span
+            class="pt-time-cell"
+            role="cell"
+            [class.pt-time-cell--actual]="month.actual"
+            [class.pt-time-cell--forecast]="!month.actual"
+            [class.sum-cell]="month.folded"
+            >{{ charge.columns[i].days || null | days: false }}</span
+          >
+        }
+        <span class="pt-cell pt-cell--center" role="cell">{{
+          charge.year.days || null | days: false
+        }}</span>
+        <span class="pt-cell" role="cell"></span>
+        <span class="pt-cell" role="cell"></span>
+      </div>
+      <div class="pt-row pt-row--total" role="row">
+        <span role="presentation"></span>
+        <span class="pt-cell total-label" role="rowheader" [attr.title]="workingDaysHint()">{{
+          t.forecast.workingDays
+        }}</span>
+        @for (month of columns(); track month.key; let i = $index) {
+          <span
+            class="pt-time-cell"
+            role="cell"
+            [class.pt-time-cell--actual]="month.actual"
+            [class.pt-time-cell--forecast]="!month.actual"
+            [class.sum-cell]="month.folded"
+            >{{ charge.columns[i].workingDays | days: false }}</span
+          >
+        }
+        <span class="pt-cell pt-cell--center" role="cell">{{
+          charge.year.workingDays | days: false
+        }}</span>
+        <span class="pt-cell" role="cell"></span>
+        <span class="pt-cell" role="cell"></span>
+      </div>
+      <div class="pt-row pt-row--total" role="row">
+        <span role="presentation"></span>
+        <span
+          class="pt-cell total-label"
+          role="rowheader"
+          [attr.title]="t.forecast.chargeabilityHint"
+          >{{ t.forecast.chargeability }}</span
+        >
+        @for (month of columns(); track month.key; let i = $index) {
+          @let cell = charge.columns[i];
+          <span
+            class="pt-time-cell"
+            role="cell"
+            [class.pt-time-cell--actual]="month.actual"
+            [class.pt-time-cell--forecast]="!month.actual"
+            [class.sum-cell]="month.folded"
+            [attr.title]="
+              t.forecast.chargeabilityCell(
+                month.name,
+                cell.chargeable | days: false,
+                cell.available | days: false
+              )
+            "
+          >
+            @if (cell.share !== null) {
+              <span
+                class="pt-chip"
+                [class]="chargeChip(cell.share)"
+                [class.planned]="!month.actual"
+                >{{ cell.share | percent }}</span
+              >
+            } @else {
+              {{ t.common.empty }}
+            }
+          </span>
+        }
+        <span
+          class="pt-cell pt-cell--center"
+          role="cell"
+          [attr.title]="t.forecast.target(settings().chargeabilityTarget)"
+        >
+          @if (charge.year.share !== null) {
+            <span
+              class="pt-chip"
+              [class]="chargeChip(charge.year.share)"
+              [class.planned]="charge.planned"
+              >{{ charge.year.share | percent }}</span
+            >
+          } @else {
+            {{ t.common.empty }}
+          }
+        </span>
+        <span class="pt-cell" role="cell"></span>
+        <span class="pt-cell" role="cell"></span>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Read-only month sums of customer and project rows, then the row totals. -->
+<ng-template #sums let-figures>
+  @for (month of columns(); track month.key) {
+    <span
+      class="pt-time-cell"
+      role="cell"
+      [class.pt-time-cell--actual]="month.actual"
+      [class.pt-time-cell--forecast]="!month.actual"
+      [class.sum-cell]="month.folded"
+      >{{ sum(figures.months, month) || null | days: false }}</span
+    >
+  }
+  <ng-container [ngTemplateOutlet]="totals" [ngTemplateOutletContext]="{ $implicit: figures }" />
+</ng-template>
+
+<!-- Total of the year, budget and Budget − forecast. -->
+<ng-template #totals let-figures>
+  @let delta = figures.budget - figures.outlook;
+  <span class="pt-cell pt-cell--center" role="cell">{{ figures.total || null | days: false }}</span>
+  <span class="pt-cell pt-cell--center" role="cell">{{
+    figures.budget || null | days: false
+  }}</span>
+  <span class="pt-cell pt-cell--center" role="cell">
+    @if (figures.budget || figures.outlook) {
+      <span class="pt-chip" [class]="deltaChip(delta)">{{ delta | delta }}</span>
+    } @else {
+      {{ t.common.empty }}
+    }
+  </span>
+</ng-template>
+
+<!--
+  The months of an order: booked days before the current month, inputs for the plan from it on
+  (only in the order's timeline), then the totals. An open-booking project's row uses it too.
+-->
+<ng-template #plans let-orderRow let-project="project">
+  @let order = orderRow.order;
+  @let timeline = timelineOf(order);
+  @for (month of columns(); track month.key) {
+    @if (month.folded || month.actual) {
+      <span
+        class="pt-time-cell"
+        role="cell"
+        [class.pt-time-cell--actual]="month.actual"
+        [class.pt-time-cell--forecast]="!month.actual"
+        [class.sum-cell]="month.folded"
+        >{{ sum(orderRow.figures.months, month) || null | days: false }}</span
+      >
+    } @else {
+      @let editable = canPlan(order, month);
+      <span
+        class="pt-time-cell pt-time-cell--forecast"
+        role="cell"
+        [attr.title]="editable ? null : t.forecast.outsideTimeline(timeline | dateRange: true)"
+      >
+        <input
+          #input
+          class="pt-grid-input"
+          type="text"
+          inputmode="decimal"
+          autocomplete="off"
+          [placeholder]="t.common.empty"
+          [value]="editable ? planned(order, month.key) : ''"
+          [disabled]="!editable"
+          [attr.aria-label]="t.forecast.cell(order.name, month.name)"
+          (change)="plan(input, project, order, month.key)"
+        />
+      </span>
+    }
+  }
+  <ng-container
+    [ngTemplateOutlet]="totals"
+    [ngTemplateOutletContext]="{ $implicit: orderRow.figures }"
+  />
+</ng-template>

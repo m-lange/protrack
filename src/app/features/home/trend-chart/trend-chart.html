@@ -1,0 +1,136 @@
+<section class="pt-card" [attr.aria-labelledby]="chartId() + '-title'">
+  <div class="pt-card__head">
+    <h2 class="pt-card__title" [id]="chartId() + '-title'">{{ title() }}</h2>
+  </div>
+  <div class="trend">
+    <!-- The percent ticks at the left of the plot. -->
+    <div class="ticks" aria-hidden="true">
+      @for (tick of ticks(); track tick.at) {
+        <span class="tick pt-num" [style.bottom.%]="tick.at">{{ tick.label }}</span>
+      }
+    </div>
+    <div
+      class="plot"
+      tabindex="0"
+      role="group"
+      [attr.aria-label]="title()"
+      (keydown)="keys($event)"
+      (blur)="hovered.set(null)"
+      (mouseleave)="hovered.set(null)"
+    >
+      @for (tick of ticks(); track tick.at) {
+        <span class="pt-guide-line" [style.--at.%]="tick.at" aria-hidden="true"></span>
+      }
+      @if (targetAt(); as at) {
+        <span class="pt-target-line" [style.--at.%]="at" aria-hidden="true"></span>
+      }
+      <svg class="lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        @for (line of lines(); track line.series.id) {
+          @for (points of line.paths; track $index) {
+            <polyline
+              [attr.points]="points"
+              [style.stroke]="line.series.color"
+              vector-effect="non-scaling-stroke"
+            />
+          }
+        }
+      </svg>
+      @for (line of lines(); track line.series.id) {
+        @for (dot of line.dots; track $index) {
+          <span
+            class="dot"
+            [style.left.%]="dot.x"
+            [style.bottom.%]="dot.y"
+            [style.--dot-color]="line.series.color"
+            aria-hidden="true"
+          ></span>
+        }
+      }
+      @if (detail(); as d) {
+        <span class="crosshair" [style.left.%]="d.at" aria-hidden="true"></span>
+        @for (v of d.values; track v.series.id) {
+          @if (v.value !== null) {
+            <span
+              class="dot dot--hover"
+              [style.left.%]="d.at"
+              [style.bottom.%]="y(v.value)"
+              [style.--dot-color]="v.series.color"
+              aria-hidden="true"
+            ></span>
+          }
+        }
+        <div
+          class="tip"
+          [class.tip--left]="d.at > 60"
+          [style.left.%]="d.at"
+          role="status"
+          aria-live="polite"
+        >
+          <strong>{{ d.name }}</strong>
+          @for (v of d.values; track v.series.id) {
+            <span class="tip__row">
+              <span class="pt-legend__swatch" [style.--swatch-color]="v.series.color"></span>
+              {{ v.series.name }} <strong class="pt-num">{{ v.text }}</strong>
+            </span>
+          }
+        </div>
+      }
+      <!-- One column per month catches the pointer, wider than the line it shows. -->
+      <div class="hits" [style.--months]="months().length" aria-hidden="true">
+        @for (month of months(); track month.key; let i = $index) {
+          <span class="hit" (mouseenter)="hovered.set(i)"></span>
+        }
+      </div>
+    </div>
+    <div class="axis" aria-hidden="true">
+      @for (label of axis(); track label.at) {
+        <span class="axis__label" [class.axis__year]="label.year" [style.left.%]="label.at">{{
+          label.label
+        }}</span>
+      }
+    </div>
+  </div>
+  <!--
+    The lines when there are two or more (one is named by the title) and the target, which a line
+    would run through anywhere in the plot. Both trend charts have this row, so they line up.
+  -->
+  <div class="pt-legend legend">
+    @if (series().length > 1) {
+      @for (s of series(); track s.id) {
+        <span class="pt-legend__item">
+          <span class="pt-legend__swatch" [style.--swatch-color]="s.color"></span>{{ s.name }}
+        </span>
+      }
+    }
+    @if (target() !== null) {
+      <span class="pt-legend__item">
+        <span class="pt-legend__line"></span>{{ t.home.chargeChart.target }}
+        <strong class="target__value">{{ t.home.percent(target()!) }}</strong>
+      </span>
+    }
+  </div>
+  <!-- The values as a table for screen readers. -->
+  <table class="hidden-table">
+    <caption>
+      {{ title() }}
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">{{ t.home.trends.month }}</th>
+        @for (s of series(); track s.id) {
+          <th scope="col">{{ s.name }}</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (month of months(); track month.key; let i = $index) {
+        <tr>
+          <th scope="row">{{ monthName(month) }}</th>
+          @for (s of series(); track s.id) {
+            <td>{{ percent(s.values[i]) }}</td>
+          }
+        </tr>
+      }
+    </tbody>
+  </table>
+</section>

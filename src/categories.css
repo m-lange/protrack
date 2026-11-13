@@ -1,0 +1,98 @@
+/*
+ * Category colors: the one place to change the colors of work locations, billing types and
+ * project statuses across the app.
+ *
+ * Each category has a main color (charts, swatches, dots, stripes) and a chip pair
+ * (background and text). By default they point to the design system's tokens. To change a
+ * color, replace the var(...) with any CSS color, for example #2a78d6.
+ * Keep chip text dark enough on its background (4.5:1).
+ */
+:root {
+  /*
+   * Work locations: scheme "Ozean" (user, 2026-11-07) — orange, plum and sky blue, checked for
+   * red-green colour vision deficiency (CVD ΔE 17.8, normal 24.3, all pairs).
+   * Out of office is absence, not a fourth hue: a light slate, hatched in the calendar.
+   * Chip backgrounds are the color at 18 % on white (OKLab), chip text a dark shade of it
+   * with at least 4.5:1 on the chip and on white.
+   */
+  --location-onsite: #e06a1b;
+  --location-onsite-bg: #fde5d9;
+  --location-onsite-text: #8a503d;
+
+  --location-home: #3d9be0;
+  --location-home-bg: #deedfb;
+  --location-home-text: #2d679b;
+
+  --location-reply: #7a3e9d;
+  --location-reply-bg: #e6dbee;
+  --location-reply-text: #513475;
+
+  --location-ooo: #c5cad6;
+  --location-ooo-bg: #eceef3;
+  --location-ooo-text: #4a5168;
+
+  /*
+   * Billing (2026-11-07): chargeable is the one strong color, a clear blue (the Chargeability
+   * chart's bars); non-chargeable and neutral step back as warm greys, which stay clear of the
+   * blue and of the location colors, also with red-green colour vision deficiency.
+   * Look "Raster" (2026-11-10): with a black accent this blue is the app's data color.
+   */
+  --billing-chargeable: #2c5bd6;
+  --billing-chargeable-bg: #dfe7fb;
+  --billing-chargeable-text: #1f3f99;
+
+  --billing-non-chargeable: #857f74;
+  --billing-non-chargeable-bg: #e8e7e5;
+  --billing-non-chargeable-text: #59575a;
+
+  --billing-neutral: #c4bfb5;
+  --billing-neutral-bg: #f4f3f1;
+  --billing-neutral-text: #636268;
+
+  /* Project status */
+  --status-active: var(--group-active);
+  --status-active-chip-bg: var(--status-active-bg);
+  --status-active-chip-text: var(--status-active-text);
+
+  --status-completed: var(--group-completed);
+  --status-completed-chip-bg: var(--status-completed-bg);
+  --status-completed-chip-text: var(--status-completed-text);
+}
+
+/* The chips take their colors from the categories above. */
+.pt-chip--onsite {
+  background: var(--location-onsite-bg);
+  color: var(--location-onsite-text);
+}
+.pt-chip--home {
+  background: var(--location-home-bg);
+  color: var(--location-home-text);
+}
+.pt-chip--reply {
+  background: var(--location-reply-bg);
+  color: var(--location-reply-text);
+}
+.pt-chip--ooo {
+  background: var(--location-ooo-bg);
+  color: var(--location-ooo-text);
+}
+.pt-chip--chargeable {
+  background: var(--billing-chargeable-bg);
+  color: var(--billing-chargeable-text);
+}
+.pt-chip--non-chargeable {
+  background: var(--billing-non-chargeable-bg);
+  color: var(--billing-non-chargeable-text);
+}
+.pt-chip--neutral {
+  background: var(--billing-neutral-bg);
+  color: var(--billing-neutral-text);
+}
+.pt-chip--active {
+  background: var(--status-active-chip-bg);
+  color: var(--status-active-chip-text);
+}
+.pt-chip--completed {
+  background: var(--status-completed-chip-bg);
+  color: var(--status-completed-chip-text);
+}

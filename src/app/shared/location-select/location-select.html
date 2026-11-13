@@ -1,0 +1,38 @@
+<div
+  ngCombobox
+  #combobox="ngCombobox"
+  class="pt-inline pt-inline--chip trigger"
+  [class]="current().chip"
+  [(expanded)]="expanded"
+  [disabled]="disabled()"
+  [attr.aria-label]="label() || null"
+  [attr.aria-invalid]="invalid()"
+  (focusout)="touch.emit()"
+>
+  <app-icon [name]="current().icon" [size]="13" />
+  <span class="name">{{ t.locations[current().id] }}</span>
+  @if (!disabled()) {
+    <app-icon class="chevron" name="chevron-down" [size]="13" />
+  }
+</div>
+
+<ng-template ngComboboxPopup [combobox]="combobox">
+  <ul
+    ngComboboxWidget
+    ngListbox
+    #listbox="ngListbox"
+    class="list"
+    selectionMode="explicit"
+    [value]="selection()"
+    [activeDescendant]="listbox.activeDescendant()"
+    (valueChange)="pick($event)"
+  >
+    @for (location of locations; track location.id) {
+      <li ngOption class="option" [value]="location.id" [label]="t.locations[location.id]">
+        <span class="pt-chip" [class]="location.chip"
+          ><app-icon [name]="location.icon" [size]="13" />{{ t.locations[location.id] }}</span
+        >
+      </li>
+    }
+  </ul>
+</ng-template>

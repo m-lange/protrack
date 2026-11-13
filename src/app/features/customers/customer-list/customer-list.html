@@ -1,0 +1,85 @@
+<div class="pt-table">
+  <div class="pt-table__grid" role="table" [attr.aria-label]="t.customers.tableLabel">
+    <div class="pt-row pt-row--head" role="row">
+      <span role="presentation"></span>
+      <span class="pt-cell" role="columnheader">{{ t.customers.column }}</span>
+    </div>
+    @for (customer of customers(); track customer.id; let first = $first, last = $last) {
+      <div
+        class="pt-row pt-row--customer"
+        role="row"
+        [attr.draggable]="editable() ? 'true' : null"
+        [class.dragging]="dragged() === customer.id"
+        [class.drop-target]="over() === customer.id && dragged() !== customer.id"
+        (dragstart)="dragStart($event, customer.id)"
+        (dragover)="dragOver($event, customer.id)"
+        (dragleave)="over.set(null)"
+        (drop)="drop($event, customer.id)"
+        (dragend)="dragEnd()"
+      >
+        <span class="pt-stripe" role="presentation"></span>
+        <span class="pt-cell pt-cell--name" role="cell">
+          <app-customer-badge [name]="customer.name" [logo]="customer.logo" />
+          @if (editable()) {
+            <!-- The name opens the customer; draggable="false" lets a drag move the row. -->
+            <a
+              class="pt-cell__text name"
+              draggable="false"
+              [routerLink]="['/customers', customer.id]"
+              >{{ customer.name }}</a
+            >
+          } @else {
+            <span class="pt-cell__text">{{ customer.name }}</span>
+          }
+          <span class="pt-cell__meta">{{
+            t.common.projectCount(projectCounts().get(customer.id) ?? 0)
+          }}</span>
+          @if (editable()) {
+            <span class="tools">
+              <button
+                type="button"
+                class="pt-toggle"
+                [attr.data-move]="customer.id + '-up'"
+                [disabled]="first"
+                [attr.aria-label]="t.customers.moveUp(customer.name)"
+                (click)="move(customer.id, -1)"
+              >
+                <app-icon name="chevron-up" />
+              </button>
+              <button
+                type="button"
+                class="pt-toggle"
+                [attr.data-move]="customer.id + '-down'"
+                [disabled]="last"
+                [attr.aria-label]="t.customers.moveDown(customer.name)"
+                (click)="move(customer.id, 1)"
+              >
+                <app-icon name="chevron-down" />
+              </button>
+              <a
+                class="pt-toggle"
+                [routerLink]="['/customers', customer.id]"
+                [attr.aria-label]="t.customers.edit(customer.name)"
+              >
+                <app-icon name="edit" />
+              </a>
+            </span>
+          }
+        </span>
+      </div>
+    } @empty {
+      <div class="pt-row pt-row--add" role="row">
+        <span role="presentation"></span>
+        <span class="pt-cell empty" role="cell">{{ t.customers.empty }}</span>
+      </div>
+    }
+    @if (editable()) {
+      <div class="pt-row pt-row--add" role="row">
+        <span role="presentation"></span>
+        <a class="pt-add-row" routerLink="/customers/new" role="cell">
+          <app-icon name="plus" [size]="14" />{{ t.customers.add }}
+        </a>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,344 @@
+<div class="pt-page-head">
+  <h1 class="pt-page-title">{{ t.settings.title }}</h1>
+</div>
+
+<!-- Language, region and December 24 and 31 each have a card of their own (user, 2026-11-11). -->
+<section class="pt-card pt-card--form" aria-labelledby="settings-language">
+  <h2 class="pt-card__title" id="settings-language">{{ t.settings.language }}</h2>
+  <!-- Each language in its own words, with its flag; a pick reloads the app (Language). -->
+  <div class="pt-segmented choice" role="group" aria-labelledby="settings-language">
+    @for (code of languages; track code) {
+      <button
+        type="button"
+        class="pt-segment"
+        [attr.lang]="code"
+        [attr.aria-pressed]="settings().language === code"
+        (click)="setLanguage(code)"
+      >
+        <img class="flag" [src]="flags[code]" alt="" width="18" height="12" />{{
+          t.languages[code]
+        }}
+      </button>
+    }
+  </div>
+</section>
+
+<section class="pt-card pt-card--form" aria-labelledby="settings-region">
+  <h2 class="pt-card__title" id="settings-region">{{ t.settings.regionTitle }}</h2>
+  <div class="fields">
+    <label class="pt-field">
+      {{ t.settings.federalState }}
+      <span class="pt-select">
+        <select class="pt-input" (change)="setRegion($event)">
+          <option value="" [selected]="!settings().region">{{ t.settings.notSet }}</option>
+          @for (code of regions; track code) {
+            <option [value]="code" [selected]="settings().region === code">
+              {{ t.regions[code] }}
+            </option>
+          }
+        </select>
+        <app-icon name="chevron-down" [size]="16" />
+      </span>
+    </label>
+  </div>
+  @if (!settings().region) {
+    <p class="pt-hint">{{ t.settings.regionHintNotSet }}</p>
+  }
+</section>
+
+<section class="pt-card pt-card--form" aria-labelledby="settings-year-end">
+  <h2 class="pt-card__title" id="settings-year-end">{{ t.settings.yearEnd }}</h2>
+  <!-- As wide as its choices, like the toggles of a project; a Harvey ball shows how much is off. -->
+  <div class="pt-segmented choice" role="group" aria-labelledby="settings-year-end">
+    @for (percent of yearEndChoices; track percent) {
+      <button
+        type="button"
+        class="pt-segment"
+        [attr.aria-pressed]="settings().yearEndDaysOff === percent"
+        (click)="setYearEndDaysOff(percent)"
+      >
+        <app-icon [name]="yearEndIcons[percent]" [size]="14" />{{
+          t.settings.yearEndChoices[percent]
+        }}
+      </button>
+    }
+  </div>
+</section>
+
+<section class="pt-card pt-card--form" aria-labelledby="settings-targets">
+  <h2 class="pt-card__title" id="settings-targets">{{ t.settings.targetsTitle }}</h2>
+  <div class="pt-target">
+    <span class="pt-target__label">{{ t.settings.chargeability }}</span>
+    <app-split-slider
+      [segments]="chargeabilitySegments()"
+      (preview)="setChargeability($event, false)"
+      (commit)="setChargeability($event, true)"
+    />
+  </div>
+
+  <div class="pt-target pt-card__divider">
+    <span class="pt-target__label">{{ t.settings.locationsTitle }}</span>
+    <app-split-slider
+      [segments]="locationSegments()"
+      (preview)="setLocations($event, false)"
+      (commit)="setLocations($event, true)"
+    />
+  </div>
+</section>
+
+<section class="pt-card pt-card--form" aria-labelledby="settings-backup">
+  <div class="pt-card__head">
+    <h2 class="pt-card__title" id="settings-backup">{{ t.settings.backupTitle }}</h2>
+    <app-backup-status />
+  </div>
+
+  <div class="stack" aria-live="polite">
+    @if (!backupSupported) {
+      <p class="pt-hint">{{ t.settings.backupUnsupported }}</p>
+    } @else if (backup.pending(); as pending) {
+      <p class="pt-hint">
+        <strong class="file-name">{{ pending.handle.name }}</strong
+        >{{
+          t.settings.pending(
+            (pending.file.savedAt | date: t.formats.dateTime) ?? '',
+            t.common.customerCount(pending.file.data.customers.length)
+          )
+        }}
+      </p>
+      <div class="actions">
+        <button type="button" class="pt-btn pt-btn--primary" (click)="loadPending()">
+          {{ t.settings.loadFromFile }}
+        </button>
+        <button type="button" class="pt-btn pt-btn--secondary" (click)="overwritePending()">
+          {{ t.settings.overwriteFile }}
+        </button>
+        <button type="button" class="pt-btn pt-btn--ghost" (click)="backup.cancelPending()">
+          {{ t.common.cancel }}
+        </button>
+      </div>
+    } @else if (backup.fileName(); as fileName) {
+      <p class="pt-hint">
+        {{ t.settings.savesToBefore }}<strong class="file-name">{{ fileName }}</strong
+        >{{ t.settings.savesToAfter }}
+        @if (savedAt(); as at) {
+          {{ t.settings.lastSaved((at | date: t.formats.dateTime) ?? '') }}
+        }
+        @if (backup.status().kind === 'paused') {
+          {{ t.settings.pausedHint }}
+        }
+      </p>
+      @if (backup.status(); as status) {
+        @if (status.kind === 'conflict') {
+          <p class="pt-hint pt-hint--error">
+            {{
+              t.settings.conflict(
+                (status.file.savedAt | date: t.formats.dateTime) ?? '',
+                t.common.customerCount(status.file.data.customers.length)
+              )
+            }}
+          </p>
+        }
+      }
+      @if (backupStatusError(); as message) {
+        <p class="pt-hint pt-hint--error">{{ message }}</p>
+      }
+      <div class="actions">
+        @switch (backup.status().kind) {
+          @case ('paused') {
+            <button type="button" class="pt-btn pt-btn--primary" (click)="resume()">
+              {{ t.settings.resume }}
+            </button>
+          }
+          @case ('conflict') {
+            <button type="button" class="pt-btn pt-btn--primary" (click)="loadFromFile()">
+              {{ t.settings.loadFromFile }}
+            </button>
+            <button type="button" class="pt-btn pt-btn--secondary" (click)="overwriteFile()">
+              {{ t.settings.overwriteFile }}
+            </button>
+          }
+          @default {
+            <button type="button" class="pt-btn pt-btn--secondary" (click)="saveNow()">
+              {{ t.settings.saveNow }}
+            </button>
+          }
+        }
+        <button type="button" class="pt-btn pt-btn--danger" (click)="unlink()">
+          <app-icon name="unlink" />{{ t.settings.unlink }}
+        </button>
+      </div>
+    } @else {
+      <p class="pt-hint">{{ t.settings.backupIntro }}</p>
+      <div class="actions">
+        <button type="button" class="pt-btn pt-btn--secondary" (click)="createBackupFile()">
+          {{ t.settings.createBackup }}
+        </button>
+        <button type="button" class="pt-btn pt-btn--secondary" (click)="openBackupFile()">
+          {{ t.settings.openBackup }}
+        </button>
+      </div>
+    }
+    @if (backupError(); as problem) {
+      <p class="pt-hint pt-hint--error" role="alert">{{ backupMessage(problem) }}</p>
+    }
+  </div>
+</section>
+
+<section class="pt-card pt-card--form" aria-labelledby="settings-snapshots">
+  <h2 class="pt-card__title" id="settings-snapshots">{{ t.settings.snapshots.title }}</h2>
+  <div class="stack" aria-live="polite">
+    <p class="pt-hint">{{ t.settings.snapshots.intro(maxSnapshots) }}</p>
+    @if (confirmingRestore(); as snapshot) {
+      <p class="pt-hint pt-hint--error">
+        {{ t.settings.snapshots.confirm(snapshotDate(snapshot), !!backup.fileName()) }}
+      </p>
+      <div class="actions">
+        <button type="button" class="pt-btn pt-btn--primary" (click)="restore(snapshot)">
+          <app-icon name="restore" />{{ t.settings.snapshots.restore }}
+        </button>
+        <button
+          type="button"
+          class="pt-btn pt-btn--secondary"
+          (click)="confirmingRestore.set(null)"
+        >
+          {{ t.common.cancel }}
+        </button>
+      </div>
+    } @else if (snapshots.list().length) {
+      <ul class="snapshots">
+        @for (snapshot of visibleSnapshots(); track snapshot.id) {
+          <li class="snapshot">
+            <span class="snapshot__when">{{ snapshotDate(snapshot) }}</span>
+            <span class="snapshot__what">
+              {{ snapshotReason(snapshot) }} ·
+              {{
+                t.settings.snapshots.counts(
+                  t.common.customerCount(snapshot.counts.customers),
+                  t.common.projectCount(snapshot.counts.projects),
+                  snapshot.counts.bookings
+                )
+              }}
+            </span>
+            <span class="actions">
+              <button
+                type="button"
+                class="pt-btn pt-btn--secondary"
+                (click)="confirmingRestore.set(snapshot); restoredAt.set(null)"
+              >
+                <app-icon name="restore" />{{ t.settings.snapshots.restore }}
+              </button>
+              <button
+                type="button"
+                class="pt-icon-btn"
+                [attr.aria-label]="t.settings.snapshots.download(snapshotDate(snapshot))"
+                [attr.title]="t.settings.snapshots.download(snapshotDate(snapshot))"
+                (click)="downloadSnapshot(snapshot)"
+              >
+                <app-icon name="download" />
+              </button>
+            </span>
+          </li>
+        }
+      </ul>
+      @if (hiddenSnapshots(); as hidden) {
+        <button type="button" class="pt-btn pt-btn--link more" (click)="showAllSnapshots.set(true)">
+          {{ t.settings.snapshots.showAll(hidden) }}
+        </button>
+      }
+    } @else {
+      <p class="pt-hint">{{ t.settings.snapshots.none }}</p>
+    }
+    @if (restoredAt(); as at) {
+      <p class="pt-hint">{{ t.settings.snapshots.restored(at) }}</p>
+    }
+    @if (restoreGone()) {
+      <p class="pt-hint pt-hint--error" role="alert">{{ t.settings.snapshots.gone }}</p>
+    }
+  </div>
+</section>
+
+<section class="pt-card pt-card--form" aria-labelledby="settings-transfer">
+  <h2 class="pt-card__title" id="settings-transfer">{{ t.settings.transferTitle }}</h2>
+  <div class="stack" aria-live="polite">
+    <p class="pt-hint">{{ t.settings.transferIntro }}</p>
+    @if (pendingImport(); as pending) {
+      <p class="pt-hint pt-hint--error">
+        <strong class="file-name">{{ pending.fileName }}</strong
+        >{{
+          t.settings.importPending(
+            (pending.file.savedAt | date: t.formats.dateTime) ?? '',
+            t.common.customerCount(pending.file.data.customers.length),
+            !!backup.fileName()
+          )
+        }}
+      </p>
+      <div class="actions">
+        <button type="button" class="pt-btn pt-btn--primary" (click)="confirmImport()">
+          {{ t.settings.replaceData }}
+        </button>
+        <button type="button" class="pt-btn pt-btn--secondary" (click)="pendingImport.set(null)">
+          {{ t.common.cancel }}
+        </button>
+      </div>
+    } @else {
+      <div class="actions">
+        <button type="button" class="pt-btn pt-btn--secondary" (click)="exportData()">
+          {{ t.settings.exportData }}
+        </button>
+        <label class="pt-btn pt-btn--secondary file-button">
+          {{ t.settings.importData }}
+          <input
+            class="file"
+            type="file"
+            accept=".json,application/json"
+            (change)="pickImport($event)"
+          />
+        </label>
+      </div>
+    }
+    @if (importError(); as problem) {
+      <p class="pt-hint pt-hint--error" role="alert">{{ t.syncFileErrors[problem] }}</p>
+    }
+    @if (importDone()) {
+      <p class="pt-hint">{{ t.settings.imported }}</p>
+    }
+  </div>
+</section>
+
+<section class="pt-card pt-card--form danger-card" aria-labelledby="settings-reset">
+  <h2 class="pt-card__title danger-title" id="settings-reset">{{ t.settings.resetTitle }}</h2>
+  <div class="stack" aria-live="polite">
+    @if (confirmingReset()) {
+      <p class="pt-hint pt-hint--error">
+        {{ t.settings.resetWarning }}
+        @if (backup.fileName(); as fileName) {
+          {{ t.settings.resetKeepsBackup(fileName) }}
+        } @else {
+          {{ t.settings.resetExportFirst }}
+        }
+      </p>
+      <div class="actions">
+        <button type="button" class="pt-btn pt-btn--danger danger-fill" (click)="confirmReset()">
+          <app-icon name="trash" />{{ t.settings.deleteEverything }}
+        </button>
+        <button type="button" class="pt-btn pt-btn--secondary" (click)="confirmingReset.set(false)">
+          {{ t.common.cancel }}
+        </button>
+      </div>
+    } @else {
+      <p class="pt-hint">{{ t.settings.resetIntro }}</p>
+      <div class="actions">
+        <button
+          type="button"
+          class="pt-btn pt-btn--danger"
+          (click)="confirmingReset.set(true); resetDone.set(false)"
+        >
+          <app-icon name="trash" />{{ t.settings.deleteAll }}
+        </button>
+      </div>
+      @if (resetDone()) {
+        <p class="pt-hint">{{ t.settings.resetDone }}</p>
+      }
+    }
+  </div>
+</section>

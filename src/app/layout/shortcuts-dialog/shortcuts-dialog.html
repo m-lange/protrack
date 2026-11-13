@@ -1,0 +1,55 @@
+<dialog #dialog class="dialog" aria-labelledby="shortcuts-title" (close)="close()">
+  <div class="pt-card pt-card--form frame">
+    <div class="head">
+      <h2 class="pt-card__title" id="shortcuts-title">{{ t.shortcuts.title }}</h2>
+      <button
+        type="button"
+        class="pt-icon-btn"
+        [attr.aria-label]="t.common.close"
+        (click)="close()"
+      >
+        <app-icon name="close" [size]="20" />
+      </button>
+    </div>
+
+    <div class="groups">
+      <section>
+        <h3 class="group">{{ t.shortcuts.goTo }}</h3>
+        <dl class="list">
+          @for (item of goTo; track item.key) {
+            <div class="line">
+              <dt>
+                <kbd>G</kbd><span class="then">{{ t.shortcuts.then }}</span
+                ><kbd>{{ item.key }}</kbd>
+              </dt>
+              <dd>{{ item.text }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+
+      <section>
+        <h3 class="group">{{ t.shortcuts.onPage }}</h3>
+        <dl class="list">
+          @for (line of onPage; track line.text) {
+            <div class="line">
+              <dt>
+                @for (mod of line.mods; track mod) {
+                  <kbd>{{ mod }}</kbd
+                  ><span class="join">+</span>
+                }
+                @for (key of line.keys; track key; let last = $last) {
+                  <kbd>{{ key }}</kbd>
+                  @if (!last) {
+                    <span class="join">/</span>
+                  }
+                }
+              </dt>
+              <dd>{{ line.text }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+    </div>
+  </div>
+</dialog>

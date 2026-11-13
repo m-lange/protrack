@@ -1,0 +1,32 @@
+<div class="pt-shell">
+  <app-top-bar />
+  @if (loadFailed()) {
+    <div class="update load-failed" role="alert">
+      <app-icon name="alert" />
+      <span>{{ t.app.loadFailed }}</span>
+      <button type="button" class="pt-btn pt-btn--primary" (click)="update.reload()">
+        {{ t.app.reload }}
+      </button>
+    </div>
+  }
+  @if (update.ready() || update.broken()) {
+    <div class="update" role="status">
+      <app-icon name="refresh" />
+      <span>{{ update.broken() ? t.app.updateBroken : t.app.updateReady }}</span>
+      <button type="button" class="pt-btn pt-btn--primary" (click)="update.reload()">
+        {{ t.app.reload }}
+      </button>
+    </div>
+  }
+  <div class="pt-shell__body">
+    <aside class="pt-shell__side" [class.collapsed]="sidebar.collapsed()"><app-side-nav /></aside>
+    <main class="pt-page">
+      <div class="page-frame">
+        <div class="page-content">
+          <router-outlet />
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<app-shortcuts-dialog />

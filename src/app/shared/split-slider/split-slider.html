@@ -1,0 +1,49 @@
+<div
+  #track
+  class="track"
+  (pointerdown)="pointerDown($event)"
+  (pointermove)="pointerMove($event)"
+  (pointerup)="pointerUp()"
+  (pointercancel)="pointerUp()"
+>
+  <span class="bar">
+    @for (segment of shown(); track segment.id) {
+      <span
+        class="segment"
+        [style.--segment-color]="segment.color"
+        [style.--share]="segment.value + '%'"
+      ></span>
+    }
+  </span>
+  @for (at of boundaries(); track $index; let i = $index) {
+    <span
+      class="handle"
+      role="slider"
+      tabindex="0"
+      [attr.data-handle]="i"
+      [style.--at]="at + '%'"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      [attr.aria-valuenow]="at"
+      [attr.aria-label]="t.splitSlider.handle(shown()[i].label, shown()[i + 1].label)"
+      [attr.aria-valuetext]="
+        t.splitSlider.valueText(
+          shown()[i].label,
+          shown()[i].value,
+          shown()[i + 1].label,
+          shown()[i + 1].value
+        )
+      "
+      (keydown)="keyDown(i, $event)"
+    ></span>
+  }
+</div>
+<ul class="legend">
+  @for (segment of shown(); track segment.id) {
+    <li class="pt-target__label pt-target__label--item">
+      <span class="pt-target__swatch" [style.--segment-color]="segment.color"></span>
+      {{ segment.label }}
+      <strong class="pt-num">{{ segment.value }}%</strong>
+    </li>
+  }
+</ul>

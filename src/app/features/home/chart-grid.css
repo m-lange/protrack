@@ -1,0 +1,52 @@
+/*
+ * The grid every chart on Home shares, so their months stand right above each other (user,
+ * 2026-11-11): 13 columns (twelve months and the year; a chart without a year bar leaves its
+ * column empty) and a 132px column at the right for target labels (empty without targets).
+ * Each chart sets its plot height as --plot-h on :host. It keeps clear room to the card head
+ * above and to the bottom of the card (user, 2026-11-07).
+ */
+.chart {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 132px;
+  gap: var(--space-12);
+  margin-block: var(--space-24) var(--space-12);
+}
+
+.chart__plot {
+  min-width: 0;
+}
+
+.pt-bars,
+.pt-axis {
+  --bars: 13;
+}
+
+/* The year's column: its label is bold. */
+.axis__year {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* The labels beside the plot, each at the height of its line or band. */
+.chart__targets {
+  position: relative;
+  height: var(--plot-h);
+  color: var(--text-secondary);
+}
+
+.chart__target {
+  position: absolute;
+  left: 0;
+  transform: translateY(50%);
+  white-space: nowrap;
+}
+
+.target__value {
+  color: var(--ink);
+}
+
+/* The legend sits centered below the plot (user, 2026-11-07). */
+.legend {
+  justify-content: center;
+  margin-top: var(--space-16);
+}

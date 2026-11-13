@@ -1,0 +1,125 @@
+:host {
+  display: contents;
+}
+
+.head {
+  align-items: center;
+}
+
+.title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-12);
+  min-width: 0;
+}
+
+.save {
+  padding: 0 var(--space-20);
+}
+
+.form {
+  display: contents;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--space-16);
+}
+
+.name {
+  grid-column: span 2;
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-24);
+}
+
+.pt-segment__dot {
+  background: var(--dot-color);
+}
+
+/* "Add custom color": a little more room inside the pill, left and right. */
+.pt-swatch-add {
+  padding: 0 var(--space-18) 0 var(--space-12);
+}
+
+/* A custom color with its remove button, shown on hover or keyboard focus. */
+.custom {
+  position: relative;
+  display: inline-flex;
+}
+
+.remove {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-9);
+  background: var(--surface);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.custom:hover .remove,
+.custom:focus-within .remove {
+  opacity: 1;
+}
+
+.remove:hover {
+  color: var(--danger-text);
+}
+
+.orders {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.pt-table__grid {
+  --pt-cols: var(--stripe) minmax(240px, 1fr) 156px 156px 164px 128px 64px;
+  min-width: 920px;
+}
+
+.pt-row--edit .pt-cell:nth-child(2) {
+  padding-left: var(--space-14);
+}
+
+.order-name {
+  flex: 1;
+  font-weight: 700;
+}
+
+.pt-inline[type='date'],
+.budget {
+  width: 100%;
+}
+
+.pt-inline[aria-invalid='true'] {
+  border-color: var(--danger-text);
+}
+
+.pt-toggle:disabled {
+  color: var(--toggle-disabled);
+  cursor: not-allowed;
+}
+
+.pt-add-row {
+  cursor: pointer;
+}
+
+.empty {
+  padding-left: var(--space-14);
+  color: var(--muted);
+}

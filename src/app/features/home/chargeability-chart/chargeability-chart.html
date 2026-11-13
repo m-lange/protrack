@@ -1,0 +1,53 @@
+<section class="pt-card" aria-labelledby="charge-chart-title">
+  <div class="pt-card__head">
+    <h2 class="pt-card__title" id="charge-chart-title">{{ t.home.chargeChart.title }}</h2>
+  </div>
+  <div class="chart">
+    <div class="chart__plot">
+      <div class="pt-bars" role="list" [attr.aria-label]="t.home.chargeChart.label(year())">
+        <span class="pt-guide-line" [style.--at.px]="guideAt" aria-hidden="true"></span>
+        @for (bar of bars(); track bar.label) {
+          <div
+            class="pt-bar"
+            role="listitem"
+            [attr.title]="bar.title"
+            [attr.aria-label]="bar.title"
+          >
+            <span
+              class="pt-bar__label"
+              [class.pt-bar__label--over]="bar.over"
+              aria-hidden="true"
+              >{{ bar.value }}</span
+            >
+            <span
+              class="pt-bar__mark"
+              [class.pt-bar__mark--forecast]="bar.forecast"
+              [style.--h.px]="bar.height"
+            ></span>
+          </div>
+        }
+        <span class="pt-target-line" [style.--at.px]="targetAt()" aria-hidden="true"></span>
+      </div>
+      <div class="pt-axis" aria-hidden="true">
+        @for (bar of bars(); track bar.label) {
+          <span [class.axis__year]="bar.year">{{ bar.label }}</span>
+        }
+      </div>
+      <!-- No entry for the target: its line is labeled beside the plot (user, 2026-11-11). -->
+      <div class="pt-legend legend">
+        <span class="pt-legend__item">
+          <span class="pt-legend__swatch swatch-booked"></span>{{ t.home.chargeChart.booked }}
+        </span>
+        <span class="pt-legend__item">
+          <span class="pt-legend__swatch swatch-forecast"></span>{{ t.home.chargeChart.forecast }}
+        </span>
+      </div>
+    </div>
+    <!-- The target beside the plot, at the height of its line, like the location chart's bands. -->
+    <div class="chart__targets" aria-hidden="true">
+      <span class="chart__target" [style.bottom.px]="targetAt()">
+        {{ t.home.chargeChart.target }} <strong class="target__value">{{ targetPercent() }}</strong>
+      </span>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,46 @@
+/* Logo left, year switcher in the middle, actions right. Narrow screens wrap (design system flex). */
+@media (min-width: 640px) {
+  .pt-topbar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .pt-topbar__actions {
+    justify-self: end;
+  }
+}
+
+.pt-topbar__actions {
+  gap: var(--space-8);
+}
+
+/*
+ * The logo tile like a customer badge in My customers (user, 2026-11-07): the same corners,
+ * the figure filling the tile, and as tall as the year switcher (its stepper height and border).
+ * It stays centered over the collapsed side navigation (and its icons), open or collapsed.
+ */
+.pt-topbar {
+  --logo-tile: calc(var(--stepper-height) + 2px);
+  padding-left: calc((var(--sidebar-width-collapsed) - var(--logo-tile)) / 2);
+}
+
+.pt-brand__mark {
+  border-radius: var(--radius-7);
+  overflow: hidden;
+}
+
+/* The backup icon carries its status as a color (tones in src/styles.css). */
+a.backup[data-tone='ok'] {
+  background: var(--backup-ok-bg);
+  color: var(--backup-ok-text);
+}
+
+a.backup[data-tone='pending'] {
+  background: var(--backup-pending-bg);
+  color: var(--backup-pending-text);
+}
+
+a.backup[data-tone='error'] {
+  background: var(--backup-error-bg);
+  color: var(--backup-error-text);
+}

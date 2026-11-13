@@ -1,0 +1,93 @@
+:host {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+/* The closed control is the location's chip (InlineInput's chip select), with a chevron. */
+.trigger {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-6);
+  padding: 0 var(--space-10);
+  cursor: pointer;
+  anchor-name: var(--anchor);
+}
+
+.trigger[aria-disabled='true'] {
+  cursor: default;
+}
+
+.trigger[aria-invalid='true'] {
+  border-color: var(--danger-text);
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  display: inline-flex;
+  transition: transform 0.15s;
+}
+
+.trigger[aria-expanded='true'] .chevron {
+  transform: rotate(180deg);
+}
+
+/*
+ * The open list floats under the chip, at least as wide as it, above it when there is no room
+ * below. Fixed and anchored, so the table's rounded frame doesn't clip it.
+ */
+.list {
+  position: fixed;
+  position-anchor: var(--anchor);
+  top: anchor(bottom);
+  left: anchor(left);
+  min-width: anchor-size(width);
+  position-try-fallbacks: flip-block;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-8);
+  box-shadow: var(--shadow-segment);
+}
+
+/*
+ * Options close together, little white around their chips, and every chip as wide as the
+ * widest (user, 2026-11-10).
+ */
+.option {
+  display: flex;
+  align-items: center;
+  min-height: var(--cell-input);
+  padding: var(--space-2);
+  border-radius: var(--radius-6);
+  cursor: pointer;
+}
+
+.option .pt-chip {
+  flex: 1;
+}
+
+.option:hover,
+.option[data-active='true'] {
+  background: var(--surface-sunken);
+}
+
+.option[aria-selected='true'] .pt-chip {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 3px var(--border-hover);
+}

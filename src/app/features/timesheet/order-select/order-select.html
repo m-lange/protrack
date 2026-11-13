@@ -1,0 +1,56 @@
+<div
+  ngCombobox
+  #combobox="ngCombobox"
+  class="pt-inline trigger"
+  [(expanded)]="expanded"
+  [disabled]="disabled()"
+  [attr.aria-label]="label() || null"
+>
+  @if (selected(); as option) {
+    <span class="pt-dot" [style.--row-color]="option.color"></span>
+    <span class="names">
+      <span class="project">{{ option.project }}</span>
+      <span class="order">{{ option.order }}</span>
+    </span>
+  } @else {
+    <span class="names placeholder">{{ placeholder() }}</span>
+  }
+  @if (!disabled()) {
+    <app-icon class="chevron" name="chevron-down" [size]="13" />
+  }
+</div>
+
+<ng-template ngComboboxPopup [combobox]="combobox">
+  <ul
+    ngComboboxWidget
+    ngListbox
+    #listbox="ngListbox"
+    class="list"
+    selectionMode="explicit"
+    [value]="selection()"
+    [activeDescendant]="listbox.activeDescendant()"
+    (valueChange)="pick($event)"
+  >
+    @for (option of options(); track option.id; let index = $index) {
+      <!-- A line between the orders of one project and those of the next. -->
+      @if (index > 0 && option.projectId !== options()[index - 1].projectId) {
+        <li class="divider" role="presentation"></li>
+      }
+      <li
+        ngOption
+        class="option"
+        [value]="option.id"
+        [label]="option.order ? option.project + ' ' + option.order : option.project"
+      >
+        <span class="pt-dot" [style.--row-color]="option.color"></span>
+        <span class="names">
+          <span class="project">{{ option.project }}</span>
+          <span class="order">{{ option.order }}</span>
+        </span>
+        <span class="customer">{{ option.customer }}</span>
+      </li>
+    } @empty {
+      <li class="none">{{ empty() }}</li>
+    }
+  </ul>
+</ng-template>

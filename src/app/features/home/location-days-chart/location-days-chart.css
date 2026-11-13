@@ -1,0 +1,11 @@
+/* The grid: ../chart-grid.css, shared with the other charts of Home. */
+:host {
+  display: block;
+  --plot-h: 200px;
+}
+
+/* The stack is as tall as the month's days against the month with the most, not the whole plot. */
+.pt-stack {
+  flex: none;
+  height: var(--h);
+}
