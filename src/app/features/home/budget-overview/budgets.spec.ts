@@ -3,7 +3,7 @@ import { customer, order, project } from '../../../testing/fake-database';
 import { budgetRows } from './budgets';
 
 describe('budgetRows', () => {
-  const booked: Record<string, number> = { a1: 10, a2: 5, b1: 50 };
+  const booked: Record<string, number> = { a1: 10, a2: 5, b1: 50, c1: 7, c2: 3 };
   const bookingsOf = (id: string): OrderBookings => ({
     total: booked[id] ?? 0,
     byMonth: new Map(),
@@ -11,6 +11,7 @@ describe('budgetRows', () => {
 
   it('sums budgets and bookings per active project, scaled to the largest', () => {
     const rows = budgetRows(
+      2026,
       [customer('Zeta', 'z', 0), customer('Alpha', 'a', 1)],
       [
         project('beta', 'a', [order('b1', '2026-01-01', '2026-12-31', { budget: 40 })]),
@@ -30,5 +31,23 @@ describe('budgetRows', () => {
     // The largest is beta's 50 booked days.
     expect(rows[0]).toMatchObject({ trackWidth: 80, fillWidth: 37.5, overWidth: 0 });
     expect(rows[1]).toMatchObject({ trackWidth: 80, fillWidth: 100, overWidth: 20 });
+  });
+
+  it('counts only the orders that run in the year and leaves out projects without one', () => {
+    const rows = budgetRows(
+      2026,
+      [customer('Alpha', 'a', 0)],
+      [
+        project('gamma', 'a', [
+          order('c1', '2025-01-01', '2025-12-31', { budget: 30 }),
+          order('c2', '2025-11-01', '2026-02-28', { budget: 10 }),
+        ]),
+        project('past', 'a', [order('p1', '2024-01-01', '2025-12-31', { budget: 20 })]),
+      ],
+      bookingsOf,
+    );
+    expect(rows.map((r) => [r.name, r.budget, r.booked, r.remaining])).toEqual([
+      ['gamma', 10, 3, 7],
+    ]);
   });
 });

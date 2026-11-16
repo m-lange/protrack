@@ -24,7 +24,7 @@ import { yearKpis } from './year-kpis';
 /**
  * The start page: the year picked in the top bar at a glance. Four KPI tiles, chargeability by
  * month, the booked days by location and month (shares, then days with out of office), the
- * remaining budget by project, and at the bottom chargeability and the location shares over all
+ * remaining budget by project of the year's orders, and at the bottom chargeability and the location shares over all
  * years.
  */
 @Component({
@@ -65,7 +65,9 @@ export class Home {
   );
 
   protected readonly budgets = computed(() =>
-    budgetRows(this.customers(), this.projects(), (orderId) => this.bookingStore.of(orderId)),
+    budgetRows(this.year(), this.customers(), this.projects(), (orderId) =>
+      this.bookingStore.of(orderId),
+    ),
   );
 
   protected readonly locations = computed(() =>

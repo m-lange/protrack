@@ -1,6 +1,7 @@
 import { projectColor } from '../../../core/categories';
 import { OrderBookings } from '../../../core/data/booking-store';
 import { Customer, Project } from '../../../core/data/model';
+import { runsBetween } from '../../../core/data/orders';
 
 /** A row of the budget overview. Days are person-days; widths are percent. */
 export interface BudgetRow {
@@ -20,10 +21,12 @@ export interface BudgetRow {
 }
 
 /**
- * The active PO-restricted projects with the budget of all their orders and the days booked on
- * them, by customer order and project name. Open-booking projects have no budget.
+ * The active PO-restricted projects with the budget of their orders that run in the year and all
+ * days booked on those orders, by customer order and project name. Projects without such an order
+ * are left out (user, 2026-11-16). Open-booking projects have no budget.
  */
 export function budgetRows(
+  year: number,
   customers: readonly Customer[],
   projects: readonly Project[],
   bookingsOf: (orderId: string) => OrderBookings,
@@ -31,9 +34,14 @@ export function budgetRows(
   const byId = new Map(customers.map((c) => [c.id, c]));
   const rows = projects
     .filter((p) => p.status === 'active' && p.booking === 'po')
-    .map((project) => {
-      const budget = project.orders.reduce((sum, o) => sum + (o.budget ?? 0), 0);
-      const booked = project.orders.reduce((sum, o) => sum + bookingsOf(o.id).total, 0);
+    .map((project) => ({
+      project,
+      orders: project.orders.filter((o) => runsBetween(o, `${year}-01-01`, `${year}-12-31`)),
+    }))
+    .filter(({ orders }) => orders.length > 0)
+    .map(({ project, orders }) => {
+      const budget = orders.reduce((sum, o) => sum + (o.budget ?? 0), 0);
+      const booked = orders.reduce((sum, o) => sum + bookingsOf(o.id).total, 0);
       const customer = byId.get(project.customerId);
       return { project, customer, budget, booked };
     })
