@@ -7,6 +7,8 @@
     class="year"
     [year]="selectedYear.year()"
     [currentYear]="selectedYear.currentYear"
+    [hasPrevious]="selectedYear.hasPrevious()"
+    [hasNext]="selectedYear.hasNext()"
     (previous)="selectedYear.previous()"
     (next)="selectedYear.next()"
     (thisYear)="selectedYear.reset()"

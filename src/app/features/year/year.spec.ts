@@ -72,7 +72,7 @@ describe('Year', () => {
 
   it('follows the year switcher', async () => {
     const { harness, element } = await open();
-    TestBed.inject(SelectedYear).previous();
+    TestBed.inject(SelectedYear).set(2025);
     await harness.fixture.whenStable();
     expect(element.querySelector('section')?.getAttribute('aria-label')).toBe('Calendar 2025');
     expect(dayTitled(element, 'Mon, Nov 3, 2025')?.title).toBe('Mon, Nov 3, 2025 · Nothing booked');

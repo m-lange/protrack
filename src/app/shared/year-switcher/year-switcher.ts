@@ -14,6 +14,9 @@ export class YearSwitcher {
 
   readonly year = input.required<number>();
   readonly currentYear = input.required<number>();
+  /** Whether there is a year to step to; the arrow is disabled when not. */
+  readonly hasPrevious = input(true);
+  readonly hasNext = input(true);
 
   readonly previous = output<void>();
   readonly next = output<void>();

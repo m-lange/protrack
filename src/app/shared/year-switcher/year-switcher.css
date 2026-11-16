@@ -8,3 +8,9 @@
 .pt-btn--link {
   font-weight: 700;
 }
+
+/* No year with an order that way (user, 2026-11-16): the arrow greys out. */
+.pt-stepper__btn:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}

@@ -1,6 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
+import { order, project } from '../testing/fake-database';
+import { ProjectStore } from './data/project-store';
 import { SelectedYear } from './selected-year';
 import { PageActions, Shortcuts } from './shortcuts';
 import { TODAY } from './today';
@@ -27,6 +29,13 @@ describe('Shortcuts', () => {
       providers: [
         provideRouter([{ path: '**', component: Blank }]),
         { provide: TODAY, useValue: new Date(2026, 10, 13) },
+        // Orders in 2025 and 2027, so the year can step both ways.
+        {
+          provide: ProjectStore,
+          useValue: {
+            projects: signal([project('p', 'c', [order('o', '2025-01-01', '2027-12-31')])]),
+          },
+        },
       ],
     });
     shortcuts = TestBed.inject(Shortcuts);

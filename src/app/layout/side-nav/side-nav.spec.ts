@@ -30,7 +30,7 @@ describe('SideNav', () => {
 
   it('follows the year picked in the top bar', async () => {
     const { fixture, element } = await render();
-    TestBed.inject(SelectedYear).next();
+    TestBed.inject(SelectedYear).set(2027);
     await fixture.whenStable();
     expect(element.querySelectorAll('.pt-nav__month')[0].getAttribute('href')).toBe(
       '/timesheet/2027/1',
