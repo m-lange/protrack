@@ -418,16 +418,36 @@ describe('Timesheet', () => {
   });
 
   it('steps to the month before and after, across the turn of the year', async () => {
-    const { harness, element } = await open('/timesheet/2026/12');
+    const { harness, element } = await open('/timesheet/2026/1');
     const router = TestBed.inject(Router);
-    element.querySelector<HTMLAnchorElement>('a[aria-label="Next: January 2027"]')!.click();
+    element.querySelector<HTMLAnchorElement>('a[aria-label="Previous: December 2025"]')!.click();
     await harness.fixture.whenStable();
-    expect(router.url).toBe('/timesheet/2027/1');
-    expect(TestBed.inject(SelectedYear).year()).toBe(2027);
+    expect(router.url).toBe('/timesheet/2025/12');
+    expect(TestBed.inject(SelectedYear).year()).toBe(2025);
+  });
+
+  it('steps only within the years the year switcher offers', async () => {
+    // The orders run from 2025 to 2026, so January 2027 is out of reach.
+    const { element } = await open('/timesheet/2026/12');
+    const next = element.querySelector<HTMLButtonElement>('[aria-label="Next: January 2027"]')!;
+    expect(next.tagName).toBe('BUTTON');
+    expect(next.disabled).toBe(true);
+  });
+
+  it('jumps from a typed month outside the years on offer to the closest one', async () => {
+    const { harness } = await open('/timesheet/2030/6');
+    await harness.fixture.whenStable();
+    const router = TestBed.inject(Router);
+    expect(router.url).toBe('/timesheet/2026/12');
+    expect(TestBed.inject(SelectedYear).year()).toBe(2026);
+
+    await harness.navigateByUrl('/timesheet/2019/6');
+    await harness.fixture.whenStable();
+    expect(router.url).toBe('/timesheet/2025/1');
   });
 
   it('goes back to this month, and offers it only from another month', async () => {
-    const { harness, element } = await open('/timesheet/2027/2');
+    const { harness, element } = await open('/timesheet/2025/2');
     const button = () => element.querySelector<HTMLButtonElement>('button.this-month')!;
     expect(button().textContent?.trim()).toBe('This month');
     expect(button().disabled).toBe(false);

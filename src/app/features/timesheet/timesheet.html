@@ -3,23 +3,45 @@
   <div class="pt-page-head__actions">
     @let adjacent = adjacentMonths();
     <div class="pt-stepper months">
-      <a
-        class="pt-stepper__btn"
-        [routerLink]="adjacent.previous.link"
-        [attr.aria-label]="t.timesheet.previousMonth(adjacent.previous.name)"
-        [attr.title]="t.timesheet.previousMonth(adjacent.previous.name)"
-      >
-        <app-icon name="chevron-left" [size]="16" />
-      </a>
+      @if (adjacent.previous.allowed) {
+        <a
+          class="pt-stepper__btn"
+          [routerLink]="adjacent.previous.link"
+          [attr.aria-label]="t.timesheet.previousMonth(adjacent.previous.name)"
+          [attr.title]="t.timesheet.previousMonth(adjacent.previous.name)"
+        >
+          <app-icon name="chevron-left" [size]="16" />
+        </a>
+      } @else {
+        <button
+          type="button"
+          class="pt-stepper__btn"
+          disabled
+          [attr.aria-label]="t.timesheet.previousMonth(adjacent.previous.name)"
+        >
+          <app-icon name="chevron-left" [size]="16" />
+        </button>
+      }
       <span class="pt-stepper__value month-name" aria-live="polite">{{ ref().name }}</span>
-      <a
-        class="pt-stepper__btn"
-        [routerLink]="adjacent.next.link"
-        [attr.aria-label]="t.timesheet.nextMonth(adjacent.next.name)"
-        [attr.title]="t.timesheet.nextMonth(adjacent.next.name)"
-      >
-        <app-icon name="chevron-right" [size]="16" />
-      </a>
+      @if (adjacent.next.allowed) {
+        <a
+          class="pt-stepper__btn"
+          [routerLink]="adjacent.next.link"
+          [attr.aria-label]="t.timesheet.nextMonth(adjacent.next.name)"
+          [attr.title]="t.timesheet.nextMonth(adjacent.next.name)"
+        >
+          <app-icon name="chevron-right" [size]="16" />
+        </a>
+      } @else {
+        <button
+          type="button"
+          class="pt-stepper__btn"
+          disabled
+          [attr.aria-label]="t.timesheet.nextMonth(adjacent.next.name)"
+        >
+          <app-icon name="chevron-right" [size]="16" />
+        </button>
+      }
     </div>
     <!-- Back to today's month, like This year beside the year in the top bar. -->
     <button

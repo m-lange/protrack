@@ -200,11 +200,22 @@ export class Timesheet {
     if (shortcuts.takeToday())
       afterNextRender(() => this.focusToday(), { injector: this.injector });
     shortcuts.use({
-      previous: () => void this.router.navigate(this.adjacentMonths().previous.link),
-      next: () => void this.router.navigate(this.adjacentMonths().next.link),
+      previous: () => this.step(this.adjacentMonths().previous),
+      next: () => this.step(this.adjacentMonths().next),
       today: () => void this.goToToday(),
       copy: () => void this.copyLastDay(),
       stepFromFields: true,
+    });
+    // A month outside the years the year switcher offers, e.g. typed into the address bar, jumps
+    // to the closest one: January of the first year or December of the last (user, 2026-11-16).
+    effect(() => {
+      const { year } = this.ref();
+      const years = this.selectedYear.years();
+      const first = years[0];
+      const last = years[years.length - 1];
+      if (year >= first && year <= last) return;
+      const to = year < first ? ['/timesheet', first, 1] : ['/timesheet', last, 12];
+      untracked(() => void this.router.navigate(to, { replaceUrl: true }));
     });
     effect(() => {
       const year = this.ref().year;
@@ -225,18 +236,27 @@ export class Timesheet {
     });
   }
 
-  /** The months before and after, for the stepper. */
+  /**
+   * The months before and after, for the stepper. A month in a year the year switcher doesn't
+   * offer can't be stepped to (user, 2026-11-16).
+   */
   protected readonly adjacentMonths = computed(() => {
     const { year, month } = this.ref();
+    const years = this.selectedYear.years();
     const at = (offset: number) => {
       const first = new Date(year, month - 1 + offset, 1);
       return {
         link: ['/timesheet', first.getFullYear(), first.getMonth() + 1],
         name: `${this.t.months[first.getMonth()]} ${first.getFullYear()}`,
+        allowed: years.includes(first.getFullYear()),
       };
     };
     return { previous: at(-1), next: at(1) };
   });
+
+  private step(to: { link: (string | number)[]; allowed: boolean }): void {
+    if (to.allowed) void this.router.navigate(to.link);
+  }
 
   /** Whether the shown month is today's. */
   protected readonly isCurrentMonth = computed(

@@ -402,6 +402,12 @@ html,
   cursor: not-allowed;
 }
 
+/* A stepper arrow with no year to step to (user, 2026-11-16): a very light grey. */
+.pt-app .pt-stepper__btn:disabled {
+  color: var(--border);
+  cursor: not-allowed;
+}
+
 /* More room between stacked cards: the page gap (space-16) plus space-8 makes space-24. */
 .pt-card + .pt-card {
   margin-top: var(--space-8);
