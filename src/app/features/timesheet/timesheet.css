@@ -35,6 +35,15 @@
   background: var(--row-color, var(--timesheet-today));
 }
 
+/*
+ * Days after today show their project's color lighter (user, 2026-11-16): booked ahead, not
+ * worked yet. Lighter than the order rows of My projects (60 %), as light as an order's
+ * timeline fill.
+ */
+.entry.future .pt-stripe {
+  background: color-mix(in srgb, var(--row-color) 20%, var(--surface));
+}
+
 /* Weekends and public holidays are greyed out. */
 .entry.off {
   background: var(--timesheet-off);

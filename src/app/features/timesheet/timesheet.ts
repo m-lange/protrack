@@ -54,6 +54,8 @@ interface Day {
   /** A public holiday on the day; its name shows in the day cell. */
   holiday: HolidayId | null;
   today: boolean;
+  /** After today: its project color is lighter, like an order's in My projects. */
+  future: boolean;
   /**
    * The days a row books when an order is picked before any hours are typed: a full day, on
    * December 24 and 31 only the part that is work (4 h for half days off, user 2026-11-10).
@@ -262,9 +264,9 @@ export class Timesheet {
 
   /**
    * The "+" key (user, 2026-11-13): copies the bookings of the shown month's last booked day
-   * (order, hours, location) to its first working day without bookings, and puts the cursor into
-   * its hours. Orders that don't run on that day are left out; with nothing to copy, nothing
-   * happens, without a message.
+   * (order, hours, location) to its first working day without bookings. The cursor stays out of
+   * the fields, so + can be pressed again and again (user, 2026-11-15). Orders that don't run on
+   * that day are left out; with nothing to copy, nothing happens, without a message.
    */
   private async copyLastDay(): Promise<void> {
     if (this.locked()) return;
@@ -290,14 +292,6 @@ export class Timesheet {
       next.delete(target);
       return next;
     });
-    afterNextRender(
-      () => {
-        const index = this.rows().findIndex((row) => row.day.date === target);
-        const row = this.host.nativeElement.querySelectorAll<HTMLElement>('.entry')[index];
-        row?.querySelector<HTMLInputElement>('.hours-input')?.focus();
-      },
-      { injector: this.injector },
-    );
   }
 
   private focusToday(): void {
@@ -344,6 +338,7 @@ export class Timesheet {
         // A day off in full still books a full day by default, like a public holiday.
         defaultDays: work > 0 ? work * FULL_DAY : FULL_DAY,
         today: date === today,
+        future: date > today,
         weekStart: weekday === 0 && index > 0,
         booked: this.bookings.onDate(date),
       };
@@ -567,7 +562,8 @@ export class Timesheet {
 
   /**
    * Puts a row on an order. A booking moves with its days; a row being made is booked at once,
-   * with the hours typed into it or a full day (user, 2026-11-10).
+   * with the hours typed into it or a full day (user, 2026-11-10). A second order on a day whose
+   * one booking is a full day splits the day: both get half (user, 2026-11-15).
    */
   protected async pickOrder(row: Row, orderId: string | null): Promise<void> {
     const entry = orderId ? this.orders().get(orderId) : undefined;
@@ -587,6 +583,27 @@ export class Timesheet {
     }
     const current = row.draft!;
     const location = current.location === entry.order.location ? null : current.location;
+    const booked = this.bookings
+      .bookings()
+      .filter((b) => b.date === date && this.orders().has(b.orderId));
+    if (current.days === null && booked.length === 1 && booked[0].days === row.day.defaultDays) {
+      const half = row.day.defaultDays / 2;
+      await this.bookings.apply(
+        [
+          { ...booked[0], days: half },
+          {
+            id: crypto.randomUUID(),
+            orderId: entry.order.id,
+            date,
+            days: half,
+            ...(location ? { location } : {}),
+          },
+        ],
+        [],
+      );
+      this.removeRow(date, current);
+      return;
+    }
     await this.commit(date, {
       ...current,
       orderId: entry.order.id,

@@ -100,6 +100,7 @@
           role="row"
           [class.off]="day.off"
           [class.today]="day.today"
+          [class.future]="day.future && !!row.entry"
           [class.first]="row.first"
           [class.week-start]="row.first && day.weekStart"
           [style.--row-color]="row.entry?.option?.color ?? null"

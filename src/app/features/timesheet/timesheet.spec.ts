@@ -203,7 +203,8 @@ describe('Timesheet', () => {
     await type(hours('Mon, Nov 2')[1], '2');
     const store = TestBed.inject(BookingStore);
     expect(store.onDay('mapping', '2026-11-02')).toBe(0.25);
-    expect(store.onDay('review', '2026-11-02')).toBe(1);
+    // Picking the second order split the full day in two.
+    expect(store.onDay('review', '2026-11-02')).toBe(0.5);
     expect(text(row('Mon, Nov 2', 1).querySelector('app-order-select')!)).toBe('risk mapping');
   });
 
@@ -212,6 +213,28 @@ describe('Timesheet', () => {
     await pickOrder('Wed, Nov 4', 'risk review');
     expect(TestBed.inject(BookingStore).onDay('review', '2026-11-04')).toBe(1);
     expect(hours('Wed, Nov 4')[0].value).toBe('8');
+  });
+
+  it('splits a full day in half when a second order is picked, and only then', async () => {
+    const { hours, pickOrder, row, stable } = await open('/timesheet/2026/11');
+    const store = TestBed.inject(BookingStore);
+    const add = (day: string, index = 0) => {
+      row(day, index)
+        .querySelector<HTMLButtonElement>('.action-cell button[aria-label^="Add entry"]')!
+        .click();
+      return stable();
+    };
+    // Nov 2: 8 h on "mapping"; a second order makes it 4 h and 4 h.
+    await add('Mon, Nov 2');
+    await pickOrder('Mon, Nov 2', 'risk review', 1);
+    expect(store.onDay('mapping', '2026-11-02')).toBe(0.5);
+    expect(store.onDay('review', '2026-11-02')).toBe(0.5);
+    expect(hours('Mon, Nov 2').map((h) => h.value)).toEqual(['4', '4']);
+    // Nov 3: 4 h only, not a full day; the second order gets a full day as before.
+    await add('Tue, Nov 3');
+    await pickOrder('Tue, Nov 3', 'risk review', 1);
+    expect(store.onDay('mapping', '2026-11-03')).toBe(0.5);
+    expect(store.onDay('review', '2026-11-03')).toBe(1);
   });
 
   it('adds rows for further orders with +, and deletes rows', async () => {
@@ -244,7 +267,7 @@ describe('Timesheet', () => {
     button('Mon, Nov 2', 'Add entry').click();
     await stable();
     await pickOrder('Mon, Nov 2', 'risk review', 1);
-    await type(hours('Mon, Nov 2')[1], '2');
+    await type(hours('Mon, Nov 2')[1], '6');
     expect(store.onDate('2026-11-02')).toBe(1.25);
     button('Mon, Nov 2', 'Add entry', 1).click();
     await stable();
@@ -429,6 +452,20 @@ describe('Timesheet', () => {
     expect(today.style.getPropertyValue('--row-color')).toBe('');
   });
 
+  it('shows the project color lighter on days after today', async () => {
+    TestBed.inject(BookingStore).set([
+      { id: 'b1', orderId: 'review', date: '2026-11-06', days: 1 },
+      { id: 'b2', orderId: 'review', date: '2026-11-07', days: 1 },
+      { id: 'b3', orderId: 'review', date: '2026-11-09', days: 1 },
+    ]);
+    const { row } = await open('/timesheet/2026/11');
+    expect(row('Fri, Nov 6').classList).not.toContain('future');
+    expect(row('Sat, Nov 7').classList).not.toContain('future');
+    expect(row('Mon, Nov 9').classList).toContain('future');
+    // A day without a project has no color to lighten.
+    expect(row('Tue, Nov 10').classList).not.toContain('future');
+  });
+
   it('opens the current month from the timesheet link', async () => {
     await open('/timesheet');
     expect(TestBed.inject(Router).url).toBe('/timesheet/2026/11');
@@ -447,6 +484,8 @@ describe('Timesheet', () => {
     plus();
     await stable();
     expect(store.find('mapping', '2026-11-04')).toMatchObject({ days: 0.5, location: 'onsite' });
+    // No field takes the cursor, so + can be pressed again.
+    expect(document.activeElement).not.toBeInstanceOf(HTMLInputElement);
 
     // Nov 4 is now the last booked day; its order ends that day, so there is nothing to copy.
     plus();

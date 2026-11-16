@@ -147,7 +147,7 @@
                   <app-timeline-pill [span]="span" />
                 }
               </span>
-              <span class="pt-cell pt-cell--center" role="cell">
+              <span class="pt-cell chip-cell" role="cell">
                 @if (open) {
                   <span class="pt-chip" [class]="location(open).chip">
                     <app-icon [name]="location(open).icon" [size]="13" />{{
@@ -156,7 +156,7 @@
                   </span>
                 }
               </span>
-              <span class="pt-cell pt-cell--center" role="cell">
+              <span class="pt-cell chip-cell" role="cell">
                 <span class="pt-chip" [class]="billing(projectRow).chip">{{
                   t.billing[project.billing]
                 }}</span>
@@ -212,7 +212,7 @@
                   <span class="pt-cell" role="cell">
                     <app-timeline-pill [span]="timelineOf(order)" order />
                   </span>
-                  <span class="pt-cell pt-cell--center" role="cell">
+                  <span class="pt-cell chip-cell" role="cell">
                     <span class="pt-chip" [class]="location(order).chip">
                       <app-icon [name]="location(order).icon" [size]="13" />{{
                         t.locations[order.location]

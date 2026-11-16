@@ -64,3 +64,19 @@ a.name:hover {
   outline: 2px solid var(--primary);
   outline-offset: -2px;
 }
+
+/*
+ * Location and billing chips fill their column, like the location picker in My timesheet
+ * (user, 2026-11-15): same height, padding and gap, the text on the left.
+ */
+.chip-cell {
+  padding: 0 var(--space-6);
+}
+
+.chip-cell .pt-chip {
+  flex: 1;
+  height: var(--cell-input-sm);
+  gap: var(--space-6);
+  padding: 0 var(--space-10);
+  border: 1px solid transparent;
+}

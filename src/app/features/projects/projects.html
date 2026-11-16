@@ -2,6 +2,18 @@
   <h1 class="pt-page-title">{{ t.projects.title }}</h1>
   @if (customers().length > 0) {
     <div class="pt-page-head__actions">
+      @if (onForecast()) {
+        <button
+          type="button"
+          class="pt-btn pt-btn--secondary"
+          [attr.title]="t.forecast.copyHint"
+          (click)="copyForecast()"
+        >
+          <app-icon [name]="copied() ? 'check' : 'copy'" />{{
+            copied() ? t.forecast.copied : t.forecast.copy
+          }}
+        </button>
+      }
       <a class="pt-btn pt-btn--primary" routerLink="/projects/new">
         <app-icon name="plus" />{{ t.projects.newProject }}
       </a>

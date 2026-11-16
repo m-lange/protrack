@@ -310,6 +310,12 @@ export const de: Strings = {
 
   forecast: {
     tableLabel: (year: number) => `Forecast ${year}`,
+    copy: 'Kopieren',
+    copied: 'Kopiert',
+    copyHint: 'Forecast dieses und der nächsten zwei Monate des Jahres für eine E-Mail kopieren',
+    copyProject: 'Projekt',
+    copyRow: (project: string, place: 'onsite' | 'remote') =>
+      `${project} › ${place === 'onsite' ? 'on-site' : 'remote'}`,
     total: 'Summe',
     budget: 'Budget',
     remaining: 'Rest',

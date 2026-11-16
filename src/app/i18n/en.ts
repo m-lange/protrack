@@ -340,6 +340,13 @@ export const en = {
 
   forecast: {
     tableLabel: (year: number) => `Forecast ${year}`,
+    /** The Copy button: this month and the next two per project, on-site and remote. */
+    copy: 'Copy',
+    copied: 'Copied',
+    copyHint: 'Copy the forecast of this month and the next two of the year for an email',
+    copyProject: 'Project',
+    copyRow: (project: string, place: 'onsite' | 'remote') =>
+      `${project} › ${place === 'onsite' ? 'on-site' : 'remote'}`,
     total: 'Total',
     budget: 'Budget',
     remaining: 'Remaining',
