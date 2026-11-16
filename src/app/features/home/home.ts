@@ -22,10 +22,10 @@ import { locationShares } from './location-chart/location-shares';
 import { yearKpis } from './year-kpis';
 
 /**
- * The start page: the year picked in the top bar at a glance. Four KPI tiles, chargeability by
- * month, the booked days by location and month (shares, then days with out of office), the
- * remaining budget by project of the year's orders, and at the bottom chargeability and the location shares over all
- * years.
+ * The start page: the year picked in the top bar at a glance. Four KPI tiles, the remaining
+ * budget by project of the year's orders, chargeability by month, the booked days by location
+ * and month (shares, then days with out of office), and at the bottom chargeability and the
+ * location shares over all years.
  */
 @Component({
   selector: 'app-home',

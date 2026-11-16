@@ -39,6 +39,8 @@
 </div>
 
 @if (hasProjects()) {
+  <!-- Right below the tiles (user, 2026-11-16). -->
+  <app-budget-overview [rows]="budgets()" />
   <app-chargeability-chart
     [year]="year()"
     [data]="chargeabilityByMonth()"
@@ -46,7 +48,6 @@
   />
   <app-location-chart [year]="year()" [data]="locations()" [targets]="settings().locationTargets" />
   <app-location-days-chart [year]="year()" [data]="locations()" />
-  <app-budget-overview [rows]="budgets()" />
   <!-- Over all years, up to the end of last month; side by side (user, 2026-11-11). -->
   @if (trends(); as history) {
     <div class="trends">
