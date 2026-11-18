@@ -233,7 +233,7 @@ export const de: Strings = {
       label: 'Budget je aktivem Projekt',
       columns: {
         project: 'Projekt',
-        used: 'Budget verbraucht',
+        bars: 'Budget und gebucht',
         booked: 'Gebucht',
         budget: 'Budget',
         remaining: 'Rest',

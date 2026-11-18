@@ -29,8 +29,8 @@ describe('budgetRows', () => {
       ['beta', 'Alpha', 40, 50, -10],
     ]);
     // The largest is beta's 50 booked days.
-    expect(rows[0]).toMatchObject({ trackWidth: 80, fillWidth: 37.5, overWidth: 0 });
-    expect(rows[1]).toMatchObject({ trackWidth: 80, fillWidth: 100, overWidth: 20 });
+    expect(rows[0]).toMatchObject({ budgetWidth: 80, bookedWidth: 30 });
+    expect(rows[1]).toMatchObject({ budgetWidth: 80, bookedWidth: 100 });
   });
 
   it('counts only the orders that run in the year and leaves out projects without one', () => {

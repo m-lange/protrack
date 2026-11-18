@@ -6,7 +6,7 @@
   margin-top: var(--space-14);
 }
 
-/* Project | budget bar | booked | budget | remaining. */
+/* Project | budget and booked bars | booked | budget | remaining. */
 .budgets__row {
   display: grid;
   grid-template-columns: minmax(180px, 1.2fr) minmax(160px, 2fr) 84px 84px 96px;
@@ -59,6 +59,49 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/*
+ * Two bars per project on one scale (user, 2026-11-18; before: the design system's BudgetBar
+ * with a red part after the track): the budget in grey above the booked days in the project
+ * color. A booked bar longer than its budget bar is over budget.
+ */
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.bars__budget,
+.bars__booked {
+  display: block;
+  width: var(--bar-w, 0%);
+}
+
+.bars__budget {
+  height: 5px;
+  background: var(--budget-bar);
+}
+
+.bars__booked {
+  height: 10px;
+  background: var(--row-color);
+}
+
+/* The legend's marks are shaped like the bars; booked stands for every project color. */
+.swatch-budget,
+.swatch-booked {
+  width: 20px;
+}
+
+.swatch-budget {
+  height: 5px;
+  --swatch-color: var(--budget-bar);
+}
+
+.swatch-booked {
+  height: 10px;
+  --swatch-color: var(--primary);
 }
 
 .empty {
