@@ -1,22 +1,12 @@
 <section class="pt-card" aria-labelledby="budgets-title">
   <div class="pt-card__head">
     <h2 class="pt-card__title" id="budgets-title">{{ t.home.budgets.title }}</h2>
-    @if (rows().length) {
-      <div class="pt-legend">
-        <span class="pt-legend__item">
-          <span class="pt-legend__swatch swatch-budget"></span>{{ t.home.budgets.columns.budget }}
-        </span>
-        <span class="pt-legend__item">
-          <span class="pt-legend__swatch swatch-booked"></span>{{ t.home.budgets.columns.booked }}
-        </span>
-      </div>
-    }
   </div>
   @if (rows().length) {
     <div class="budgets" role="table" [attr.aria-label]="t.home.budgets.label">
       <div class="budgets__row budgets__head" role="row">
         <span role="columnheader">{{ t.home.budgets.columns.project }}</span>
-        <span role="columnheader">{{ t.home.budgets.columns.bars }}</span>
+        <span role="columnheader">{{ t.home.budgets.columns.used }}</span>
         <span class="num" role="columnheader">{{ t.home.budgets.columns.booked }}</span>
         <span class="num" role="columnheader">{{ t.home.budgets.columns.budget }}</span>
         <span class="num" role="columnheader">{{ t.home.budgets.columns.remaining }}</span>
@@ -29,9 +19,13 @@
             <span class="budgets__customer">{{ row.customer }}</span>
           </span>
           <span role="cell">
-            <span class="bars" [attr.title]="barTitle(row)">
-              <span class="bars__budget" [style.--bar-w.%]="row.budgetWidth"></span>
-              <span class="bars__booked" [style.--bar-w.%]="row.bookedWidth"></span>
+            <span class="pt-budget-bar" [attr.title]="barTitle(row)">
+              <span class="pt-budget-bar__track" [style.--track-w.%]="row.trackWidth">
+                <span class="pt-budget-bar__fill" [style.--fill-w.%]="row.fillWidth"></span>
+              </span>
+              @if (row.overWidth > 0) {
+                <span class="pt-budget-bar__over" [style.--over-w.%]="row.overWidth"></span>
+              }
             </span>
           </span>
           <span class="num" role="cell">{{ row.booked | days }}</span>

@@ -132,12 +132,6 @@ body {
   --delta-minus: #f0a020;
   --delta-minus-strong: #ee5a5f;
 
-  /*
-   * The budget's bar in Remaining budget by project on Home (2026-11-18): a mid grey above the
-   * booked days in the project color. 3.3:1 on white.
-   */
-  --budget-bar: #8f8f8a;
-
   /* The backup status: saved (green), changes not in the file yet (blue), a problem (red). */
   --backup-ok-bg: var(--check-ok-bg);
   --backup-ok-text: var(--check-ok-text);

@@ -6,7 +6,7 @@
   margin-top: var(--space-14);
 }
 
-/* Project | budget and booked bars | booked | budget | remaining. */
+/* Project | budget bar | booked | budget | remaining. */
 .budgets__row {
   display: grid;
   grid-template-columns: minmax(180px, 1.2fr) minmax(160px, 2fr) 84px 84px 96px;
@@ -62,46 +62,20 @@
 }
 
 /*
- * Two bars per project on one scale (user, 2026-11-18; before: the design system's BudgetBar
- * with a red part after the track): the budget in grey above the booked days in the project
- * color. A booked bar longer than its budget bar is over budget.
+ * Days over budget (user, 2026-11-18; before: the design system's red part after a 2px gap):
+ * right after the track, hatched in the project color and the track's grey, so the pattern
+ * shows them, not a hue. At least 10px wide, so a small overrun stays visible; the track gives
+ * way for it.
  */
-.bars {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.bars__budget,
-.bars__booked {
-  display: block;
-  width: var(--bar-w, 0%);
-}
-
-.bars__budget {
-  height: 5px;
-  background: var(--budget-bar);
-}
-
-.bars__booked {
-  height: 10px;
-  background: var(--row-color);
-}
-
-/* The legend's marks are shaped like the bars; booked stands for every project color. */
-.swatch-budget,
-.swatch-booked {
-  width: 20px;
-}
-
-.swatch-budget {
-  height: 5px;
-  --swatch-color: var(--budget-bar);
-}
-
-.swatch-booked {
-  height: 10px;
-  --swatch-color: var(--primary);
+.pt-budget-bar__over {
+  flex: none;
+  min-width: 10px;
+  margin-left: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--track) 0 2px,
+    var(--row-color) 2px 5px
+  );
 }
 
 .empty {

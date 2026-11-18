@@ -257,7 +257,7 @@ export const en = {
       label: 'Budget per active project',
       columns: {
         project: 'Project',
-        bars: 'Budget and booked',
+        used: 'Budget used',
         booked: 'Booked',
         budget: 'Budget',
         remaining: 'Remaining',

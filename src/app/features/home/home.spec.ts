@@ -85,7 +85,9 @@ describe('Home', () => {
     expect(charge.querySelector('.chart__target')?.textContent).toContain('Target 80\u00a0%');
     expect(charge.querySelector('.pt-legend')?.textContent).not.toContain('Target');
     const budgets = element.querySelector('app-budget-overview')!;
-    expect(budgets.querySelector('.bars')?.getAttribute('title')).toBe('risk: 5/20 d');
+    expect(budgets.querySelector('.pt-budget-bar')?.getAttribute('title')).toBe(
+      'risk: 5/20 d',
+    );
     const locations = element.querySelector('app-location-chart')!;
     expect(locations.querySelectorAll('.pt-bar').length).toBe(13);
     expect(locations.querySelectorAll('.pt-target-line').length).toBe(2);

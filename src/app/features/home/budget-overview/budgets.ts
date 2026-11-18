@@ -12,10 +12,12 @@ export interface BudgetRow {
   budget: number;
   booked: number;
   remaining: number;
-  /** The budget's bar, relative to the largest budget or booking of all rows. */
-  budgetWidth: number;
-  /** The booked days' bar on the same scale: longer than the budget's when over budget. */
-  bookedWidth: number;
+  /** The budget track, relative to the largest budget or booking of all rows. */
+  trackWidth: number;
+  /** The booked days within the track, up to 100. */
+  fillWidth: number;
+  /** The days over budget after the track, relative like the track. */
+  overWidth: number;
 }
 
 /**
@@ -58,7 +60,8 @@ export function budgetRows(
     budget,
     booked,
     remaining: budget - booked,
-    budgetWidth: percent(budget, scale),
-    bookedWidth: percent(booked, scale),
+    trackWidth: percent(budget, scale),
+    fillWidth: Math.min(100, percent(booked, budget)),
+    overWidth: percent(Math.max(0, booked - budget), scale),
   }));
 }
