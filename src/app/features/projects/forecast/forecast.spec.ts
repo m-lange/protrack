@@ -70,7 +70,7 @@ describe('Forecast', () => {
     expect(names).toEqual(['risk']);
   });
 
-  it('shows completed projects with orders in the year in the same table', async () => {
+  it('leaves out completed projects, even with orders in the year', async () => {
     TestBed.inject(ProjectStore).set([
       project('risk', 's', [order('mapping', '2026-09-14', '2026-11-30')]),
       project('audit', 's', [order('review', '2026-02-02', '2026-04-30')], {
@@ -84,8 +84,7 @@ describe('Forecast', () => {
     const names = [...element.querySelectorAll('.pt-row--project .pt-cell__text')].map(
       (n) => n.textContent,
     );
-    // Projects by name, completed among active.
-    expect(names).toEqual(['audit', 'risk']);
+    expect(names).toEqual(['risk']);
   });
 
   it('saves a plan in steps of 0.25 and undoes what is not a number', async () => {

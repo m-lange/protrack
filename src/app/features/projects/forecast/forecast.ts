@@ -161,19 +161,18 @@ export class Forecast {
   }
 
   /**
-   * All projects, active or completed, with the orders that run in the year or have bookings
-   * in it, in one table (user, 2026-11-10). Orders without a timeline (open booking) run in
-   * every year while their project is active.
+   * The active projects with the orders that run in the year or have bookings in it; completed
+   * projects stay out (user, 2026-11-19). Orders without a timeline (open booking) run in
+   * every year.
    */
   protected readonly rows = computed<CustomerRow[]>(() => {
     const months = this.months().map((m) => m.key);
     const year = this.year();
-    const inYear = (order: Order, project: Project) =>
-      (timelineOf(order)
-        ? runsBetween(order, `${year}-01-01`, `${year}-12-31`)
-        : project.status === 'active') ||
+    const inYear = (order: Order) =>
+      !timelineOf(order) ||
+      runsBetween(order, `${year}-01-01`, `${year}-12-31`) ||
       months.some((month) => this.bookings.of(order.id).byMonth.has(month));
-    const nodes = buildTree(this.customers(), this.store.projects(), 'all', { orders: inYear });
+    const nodes = buildTree(this.customers(), this.store.projects(), 'active', { orders: inYear });
     return nodes.map((node) => this.customerRow(node, months));
   });
 
