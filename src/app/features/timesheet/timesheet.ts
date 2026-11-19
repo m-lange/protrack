@@ -2,9 +2,7 @@ import { formatDate } from '@angular/common';
 import {
   Component,
   ElementRef,
-  Injector,
   LOCALE_ID,
-  afterNextRender,
   computed,
   effect,
   inject,
@@ -163,7 +161,6 @@ export class Timesheet {
   private readonly selectedYear = inject(SelectedYear);
   private readonly router = inject(Router);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
-  private readonly injector = inject(Injector);
 
   /** From the route: the year and month (1–12). */
   readonly year = input<string>();
@@ -195,16 +192,19 @@ export class Timesheet {
    * and picking another year in the top bar shows the same month in it.
    */
   constructor() {
-    // Page up / Page down step the month, also from the hours; "." goes to today.
-    const shortcuts = inject(Shortcuts);
-    if (shortcuts.takeToday())
-      afterNextRender(() => this.focusToday(), { injector: this.injector });
-    shortcuts.use({
+    // Page up / Page down step the month, also from the hours; "." goes to today's month with
+    // nothing selected; Escape deselects everything, also from the hours (user, 2026-11-19).
+    inject(Shortcuts).use({
       previous: () => this.step(this.adjacentMonths().previous),
       next: () => this.step(this.adjacentMonths().next),
-      today: () => void this.goToToday(),
+      today: () => {
+        this.deselect();
+        void this.showThisMonth();
+      },
       copy: () => void this.copyLastDay(),
+      cancel: () => this.deselect(),
       stepFromFields: true,
+      cancelFromFields: true,
     });
     // A month outside the years the year switcher offers, e.g. typed into the address bar, jumps
     // to the closest one: January of the first year or December of the last (user, 2026-11-16).
@@ -272,16 +272,6 @@ export class Timesheet {
     ]);
   }
 
-  /** Shows today's month and puts the cursor into today's hours (the "." key). */
-  private async goToToday(): Promise<void> {
-    if (this.isCurrentMonth()) {
-      this.focusToday();
-      return;
-    }
-    await this.showThisMonth();
-    afterNextRender(() => this.focusToday(), { injector: this.injector });
-  }
-
   /**
    * The "+" key (user, 2026-11-13): copies the bookings of the shown month's last booked day
    * (order, hours, location) to its first working day without bookings. The cursor stays out of
@@ -314,8 +304,14 @@ export class Timesheet {
     });
   }
 
-  private focusToday(): void {
-    this.host.nativeElement.querySelector<HTMLInputElement>('.entry.today .hours-input')?.focus();
+  /**
+   * The Escape key: leaves the focused field or control and clears any selected text. Hours
+   * typed into the field are kept, as when clicking elsewhere.
+   */
+  private deselect(): void {
+    const focused = this.host.nativeElement.ownerDocument.activeElement;
+    if (focused instanceof HTMLElement) focused.blur();
+    this.host.nativeElement.ownerDocument.getSelection()?.removeAllRanges();
   }
 
   /** Whether the shown month is locked: its entries show but can't be changed. */

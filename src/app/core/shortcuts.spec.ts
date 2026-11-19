@@ -86,8 +86,6 @@ describe('Shortcuts', () => {
     press('.');
     await new Promise((resolve) => setTimeout(resolve));
     expect(router.url).toBe('/timesheet');
-    expect(shortcuts.takeToday()).toBe(true);
-    expect(shortcuts.takeToday()).toBe(false);
   });
 
   it('lets the page take over its keys while it shows', () => {

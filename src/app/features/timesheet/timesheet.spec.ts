@@ -512,4 +512,29 @@ describe('Timesheet', () => {
     await stable();
     expect(store.bookings().filter((b) => b.date === '2026-11-05')).toEqual([]);
   });
+
+  it('deselects everything with Escape, also from the hours', async () => {
+    const { hours, stable } = await open('/timesheet/2026/11');
+    const shortcuts = TestBed.inject(Shortcuts);
+    const escape = (target: EventTarget) => {
+      const event = new KeyboardEvent('keydown', {
+        key: 'Escape',
+        cancelable: true,
+        bubbles: true,
+      });
+      const handle = (e: Event) => shortcuts.handle(e as KeyboardEvent);
+      document.addEventListener('keydown', handle);
+      target.dispatchEvent(event);
+      document.removeEventListener('keydown', handle);
+      return event;
+    };
+    const field = hours('Wed, Nov 4')[0];
+    field.focus();
+    await stable();
+    expect(document.activeElement).toBe(field);
+
+    expect(escape(field).defaultPrevented).toBe(true);
+    expect(document.activeElement).not.toBe(field);
+    expect(document.getSelection()?.rangeCount ?? 0).toBe(0);
+  });
 });

@@ -12,7 +12,7 @@ export interface PageActions {
   previous?: () => void;
   /** Page down: the year after; My timesheet shows the month after. */
   next?: () => void;
-  /** ".": today's month in My timesheet, from any page (user, 2026-11-13). */
+  /** ".": today's month in My timesheet, from any page; nothing selected (user, 2026-11-19). */
   today?: () => void;
   /** "n": a new account or project. */
   create?: () => void;
@@ -20,10 +20,12 @@ export interface PageActions {
   copy?: () => void;
   /** Ctrl+S: saves the edit page, also while typing in it. */
   save?: () => void;
-  /** Escape: leaves the edit page without saving. */
+  /** Escape: leaves the edit page without saving; My timesheet deselects everything. */
   cancel?: () => void;
   /** Page up and Page down work in text fields too (the hours of My timesheet). */
   stepFromFields?: boolean;
+  /** Escape works in text fields too (the hours of My timesheet). */
+  cancelFromFields?: boolean;
 }
 
 /** The pages "g" and a letter go to (user, 2026-11-13). */
@@ -59,9 +61,6 @@ export class Shortcuts {
   /** Whether the list of shortcuts shows. */
   readonly helpOpen = signal(false);
 
-  /** "." asked My timesheet to put the cursor into today's hours once it shows. */
-  private todayWanted = false;
-
   /** Sets the actions of a page while it shows. Call it in the page's constructor. */
   use(actions: PageActions): void {
     this.pages.push(actions);
@@ -69,16 +68,6 @@ export class Shortcuts {
       const index = this.pages.indexOf(actions);
       if (index >= 0) this.pages.splice(index, 1);
     });
-  }
-
-  /**
-   * Whether My timesheet should put the cursor into today's hours: "." opened it. Asking clears
-   * the wish, so it holds only for the page "." opened.
-   */
-  takeToday(): boolean {
-    const wanted = this.todayWanted;
-    this.todayWanted = false;
-    return wanted;
   }
 
   /** The app's keydown handler, on the document. */
@@ -118,6 +107,17 @@ export class Shortcuts {
       return;
     }
 
+    if (
+      event.key === 'Escape' &&
+      page.cancel &&
+      page.cancelFromFields &&
+      target instanceof HTMLInputElement &&
+      !inList(target)
+    ) {
+      event.preventDefault();
+      page.cancel();
+      return;
+    }
     if (isField(target) || inList(target) || event.repeat) return;
     const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
 
@@ -144,12 +144,8 @@ export class Shortcuts {
         return;
       case '.':
         event.preventDefault();
-        if (page.today) {
-          page.today();
-        } else {
-          this.todayWanted = true;
-          void this.router.navigateByUrl('/timesheet');
-        }
+        if (page.today) page.today();
+        else void this.router.navigateByUrl('/timesheet');
         return;
       case 'n':
         if (!page.create || event.shiftKey) return;
