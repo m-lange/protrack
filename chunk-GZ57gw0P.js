@@ -1,0 +1,1 @@
+import{gt as T}from"./chunk-ojRzPGUD.js";var t=new T(`TODAY`,{providedIn:`root`,factory:()=>/* @__PURE__ */ new Date});export{t};
