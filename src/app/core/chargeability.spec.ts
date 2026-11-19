@@ -3,7 +3,7 @@ import { publicHolidays } from '../shared/dates/holidays';
 import { OrderBookings } from './data/booking-store';
 import {
   chargeabilityByMonth,
-  plannedChargeability,
+  forecastChargeability,
   sumChargeability,
   targetStatus,
 } from './chargeability';
@@ -116,25 +116,20 @@ describe('chargeabilityByMonth', () => {
   });
 });
 
-describe('plannedChargeability', () => {
+describe('forecastChargeability', () => {
   const holidays = publicHolidays(2026, null);
   const projects = [
     project('client', 'c', [
       order('work', '2026-01-01', '2026-12-31', {
-        forecast: { '2026-10': 5, '2026-11': 8, '2026-12': 4 },
+        forecast: { '2026-09': 5, '2026-11': 8, '2026-12': 4 },
       }),
     ]),
-    // Out of office planned in September counts as planned, too.
-    project('leave', 'c', [
-      order('away', '2026-01-01', '2026-12-31', { location: 'ooo', forecast: { '2026-09': 2 } }),
-    ]),
-    // A plan outside its order's timeline is no plan.
-    project('old', 'c', [order('gone', '2026-01-01', '2026-01-31', { forecast: { '2026-05': 3 } })]),
   ];
   const booked: Record<string, [string, number][]> = {
     work: [
-      ['2026-03', 10], // booked without a plan: March stays out
+      ['2026-03', 10],
       ['2026-10', 11],
+      ['2026-11', 3], // the current month counts its plan
     ],
   };
   const bookingsOf = (id: string): OrderBookings => {
@@ -142,24 +137,24 @@ describe('plannedChargeability', () => {
     return { total: [...byMonth.values()].reduce((a, b) => a + b, 0), byMonth };
   };
 
-  it('takes the months with days planned, past ones as booked', () => {
+  it('takes the booked months, then the months with days in the forecast', () => {
     const charge = chargeabilityByMonth(2026, projects, bookingsOf, holidays, '2026-11');
-    // September is past: its 22 working days count as booked, with nothing booked (the planned
-    // out-of-office days don't count). October 11 booked of 22; November 8 planned of 21;
-    // December 4 planned of 22 (Christmas on Friday).
-    expect(plannedChargeability(charge, projects)).toEqual({
-      days: 23,
+    // March 10 booked of 22 working days; October 11 booked of 22; November 8 planned of 21;
+    // December 4 planned of 22 (Christmas on Friday). September was planned but has no bookings:
+    // it stays out, as do the other months without days.
+    expect(forecastChargeability(charge)).toEqual({
+      days: 33,
       workingDays: 22 + 22 + 21 + 22,
-      chargeable: 23,
+      chargeable: 33,
       available: 22 + 22 + 21 + 22,
-      share: 23 / 87,
+      share: 33 / 87,
       months: 4,
     });
   });
 
-  it('is null without plans', () => {
-    const charge = chargeabilityByMonth(2026, projects, bookingsOf, holidays, '2026-11');
-    expect(plannedChargeability(charge, [])).toBeNull();
+  it('is null without days', () => {
+    const charge = chargeabilityByMonth(2026, [], bookingsOf, holidays, '2026-11');
+    expect(forecastChargeability(charge)).toBeNull();
   });
 });
 

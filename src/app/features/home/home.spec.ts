@@ -61,12 +61,12 @@ describe('Home', () => {
     // Chargeability, Jan 1 – Nov 30 (the end of this month): 232 working days without
     // nationwide holidays, 1 out of office; days without a booking count as non-chargeable.
     // Year-end: October 1 booked, November 8 planned over 1 booked, December 4 planned.
-    // Chargeability forecast over November and December, the planned months: 12 chargeable of
-    // 21 + 21 working days (Christmas on Friday, December 24 and 31 half days off).
-    expect(values()).toEqual(['2 days', '1 %', '13 days', '29 %']);
+    // Forecast %: October booked, then November and December planned: 13 chargeable of 22 + 21
+    // + 21 working days (Christmas on Friday, December 24 and 31 half days off).
+    expect(values()).toEqual(['2 days', '1 %', '13 days', '20 %']);
     expect(targets()).toEqual(['below', 'below', 'below', 'below']);
     expect(titles()[2]).toContain('\n2 booked + 11 planned');
-    expect(titles()[3]).toContain('\n12/42 d \u00b7 2 months');
+    expect(titles()[3]).toContain('\n13/64 d · 3 months');
     expect(titles()[1]).toContain('\n2/231 d · target 80%');
   });
 

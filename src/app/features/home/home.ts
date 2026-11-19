@@ -2,7 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import {
   TargetStatus,
   chargeabilityByMonth,
-  plannedChargeability,
+  forecastChargeability,
   targetStatus,
 } from '../../core/chargeability';
 import { BookingStore } from '../../core/data/booking-store';
@@ -69,9 +69,9 @@ export class Home {
     ),
   );
 
-  /** Chargeability over the months with days planned in the forecast. */
+  /** Chargeability over the booked months and the months with days in the forecast. */
   protected readonly chargeForecast = computed(() =>
-    plannedChargeability(this.chargeabilityByMonth(), this.projects()),
+    forecastChargeability(this.chargeabilityByMonth()),
   );
 
   protected readonly budgets = computed(() =>

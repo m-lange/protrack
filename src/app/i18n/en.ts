@@ -228,7 +228,7 @@ export const en = {
     forecastTitle: 'Chargeable days by year end',
     forecastDetail: (booked: string, planned: string) => `${booked} booked + ${planned} planned`,
     chargeForecast: 'Forecast %',
-    chargeForecastTitle: 'Months with days in the forecast',
+    chargeForecastTitle: 'Booked months, then months with forecast',
     chargeForecastDetail: (chargeable: string, available: string, months: number) =>
       `${chargeable}/${available} d · ${months === 1 ? '1 month' : `${months} months`}`,
     chargeability: 'Chargeability',

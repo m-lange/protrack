@@ -125,19 +125,15 @@ export function chargeabilityByMonth(
 }
 
 /**
- * The chargeability forecast: chargeability over the months of `charge` in which at least one
- * order has a day planned, those months as `chargeabilityByMonth` counts them (booked before the
- * current month, planned from it on). Months without a plan stay out, so the months not planned
- * yet don't pull it down (user, 2026-11-19). Null when no month is planned or has no days.
+ * The chargeability forecast: chargeability over the months of `charge` with days in them, as
+ * `chargeabilityByMonth` counts them: the booked months before the current month, then the
+ * months with days in the forecast. Months with neither stay out, so the months not planned yet
+ * don't pull it down (user, 2026-11-19). Null when no month has days.
  */
-export function plannedChargeability(
+export function forecastChargeability(
   charge: YearChargeability,
-  projects: readonly Project[],
 ): (Chargeability & { share: number; months: number }) | null {
-  const orders = projects.flatMap((project) => project.orders);
-  const planned = charge.months.filter((m) =>
-    orders.some((order) => runsIn(order, m.month) && (order.forecast[m.month] ?? 0) > 0),
-  );
-  const sum = sumChargeability(planned);
-  return sum.share === null ? null : { ...sum, share: sum.share, months: planned.length };
+  const counted = charge.months.filter((m) => m.days > 0);
+  const sum = sumChargeability(counted);
+  return sum.share === null ? null : { ...sum, share: sum.share, months: counted.length };
 }

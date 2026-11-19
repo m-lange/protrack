@@ -209,7 +209,7 @@ export const de: Strings = {
     forecastTitle: 'Chargeable Tage bis Jahresende',
     forecastDetail: (booked: string, planned: string) => `${booked} gebucht + ${planned} Forecast`,
     chargeForecast: 'Forecast %',
-    chargeForecastTitle: 'Monate mit Tagen im Forecast',
+    chargeForecastTitle: 'Gebuchte Monate, dann Monate mit Forecast',
     chargeForecastDetail: (chargeable: string, available: string, months: number) =>
       `${chargeable}/${available} PT · ${months === 1 ? '1 Monat' : `${months} Monate`}`,
     chargeability: 'Chargeability',
