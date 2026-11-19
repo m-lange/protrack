@@ -441,8 +441,14 @@ html,
   min-width: 100%;
 }
 
+/*
+ * The page is the containing block of everything absolutely positioned in it (like the
+ * screen-reader tables of the trend charts). If one escapes to a block outside the scrolling
+ * page, Chromium repaints the whole page on every scroll step and parts stay white (2026-11-19).
+ */
 .pt-app .pt-page {
   display: block;
+  position: relative;
 }
 
 /* Clips the rows to the rounded frame without making the table a scroll container. */
