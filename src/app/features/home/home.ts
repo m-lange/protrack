@@ -1,5 +1,10 @@
 import { Component, computed, inject } from '@angular/core';
-import { TargetStatus, chargeabilityByMonth, targetStatus } from '../../core/chargeability';
+import {
+  TargetStatus,
+  chargeabilityByMonth,
+  plannedChargeability,
+  targetStatus,
+} from '../../core/chargeability';
 import { BookingStore } from '../../core/data/booking-store';
 import { CustomerStore } from '../../core/data/customer-store';
 import { ProjectStore } from '../../core/data/project-store';
@@ -62,6 +67,11 @@ export class Home {
       this.holidays(),
       monthOf(this.today),
     ),
+  );
+
+  /** Chargeability over the months with days planned in the forecast. */
+  protected readonly chargeForecast = computed(() =>
+    plannedChargeability(this.chargeabilityByMonth(), this.projects()),
   );
 
   protected readonly budgets = computed(() =>
@@ -129,14 +139,22 @@ export class Home {
     return this.t.home.tooltip(title, detail);
   });
 
+  /** The chargeability forecast's tooltip, with its days and months once there are any. */
+  protected readonly chargeForecastTooltip = computed(() => {
+    const charge = this.chargeForecast();
+    const title = this.t.home.chargeForecastTitle;
+    if (!charge) return title;
+    const detail = this.t.home.chargeForecastDetail(
+      formatDays(charge.chargeable),
+      formatDays(charge.available),
+      charge.months,
+    );
+    return this.t.home.tooltip(title, detail);
+  });
+
   /** Person-days written out ("143 days"); "–" when there are none. */
   protected days(value: number | undefined): string {
     return value === undefined ? this.t.common.empty : this.t.home.days(formatDays(value));
-  }
-
-  /** A projection in whole days: it is an estimate. */
-  protected roundDays(value: number | undefined): number | undefined {
-    return value === undefined ? undefined : Math.round(value);
   }
 
   /** A share in whole percent with a space before the sign ("73 %"); "–" when there is none. */

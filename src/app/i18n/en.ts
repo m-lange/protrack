@@ -227,8 +227,10 @@ export const en = {
     forecast: 'Year-end forecast',
     forecastTitle: 'Chargeable days by year end',
     forecastDetail: (booked: string, planned: string) => `${booked} booked + ${planned} planned`,
-    projection: 'Year-end projection',
-    projectionTitle: 'At your pace so far',
+    chargeForecast: 'Forecast %',
+    chargeForecastTitle: 'Months with days in the forecast',
+    chargeForecastDetail: (chargeable: string, available: string, months: number) =>
+      `${chargeable}/${available} d · ${months === 1 ? '1 month' : `${months} months`}`,
     chargeability: 'Chargeability',
     chargeabilityTitle: 'Chargeable ÷ (working days − out of office − neutral)',
     chargeabilityDetail: (chargeable: string, available: string, target: number) =>
@@ -359,6 +361,7 @@ export const en = {
     outsideTimeline: (range: string) => `Runs ${range}`,
     days: 'All projects',
     daysHint: 'Booked, from this month forecast',
+    overWorkingDays: 'More days than working days',
     workingDays: 'Working days',
     workingDaysHint: (region: string) => `Mon–Fri without holidays (${region})`,
     workingDaysHintNoRegion: 'Mon–Fri without nationwide holidays',

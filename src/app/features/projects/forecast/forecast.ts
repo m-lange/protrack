@@ -204,6 +204,19 @@ export class Forecast {
   });
 
   /**
+   * The months in which all projects together have more days than working days: their inputs
+   * are tinted like the All projects cell (user, 2026-11-19).
+   */
+  protected readonly overMonths = computed(
+    () =>
+      new Set(
+        this.chargeability()
+          .year.months.filter((m) => m.days > m.workingDays)
+          .map((m) => m.month),
+      ),
+  );
+
+  /**
    * The badge color of a chargeability, against the target (like the Remaining badges): at or
    * above the target green, up to 10 points below yellow, further below red.
    */

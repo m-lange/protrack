@@ -14,6 +14,14 @@
   </div>
   <div
     class="pt-kpi"
+    [attr.title]="chargeabilityTooltip()"
+    [attr.data-target]="status(k.chargeability?.share)"
+  >
+    <div class="pt-kpi__label">{{ t.home.chargeability }}</div>
+    <div class="pt-kpi__value">{{ percent(k.chargeability?.share) }}</div>
+  </div>
+  <div
+    class="pt-kpi"
     [attr.title]="forecastTooltip()"
     [attr.data-target]="status(k.forecast?.share)"
   >
@@ -22,19 +30,11 @@
   </div>
   <div
     class="pt-kpi"
-    [attr.title]="t.home.projectionTitle"
-    [attr.data-target]="status(k.projection?.share)"
+    [attr.title]="chargeForecastTooltip()"
+    [attr.data-target]="status(chargeForecast()?.share)"
   >
-    <div class="pt-kpi__label">{{ t.home.projection }}</div>
-    <div class="pt-kpi__value">{{ days(roundDays(k.projection?.total)) }}</div>
-  </div>
-  <div
-    class="pt-kpi"
-    [attr.title]="chargeabilityTooltip()"
-    [attr.data-target]="status(k.chargeability?.share)"
-  >
-    <div class="pt-kpi__label">{{ t.home.chargeability }}</div>
-    <div class="pt-kpi__value">{{ percent(k.chargeability?.share) }}</div>
+    <div class="pt-kpi__label">{{ t.home.chargeForecast }}</div>
+    <div class="pt-kpi__value">{{ percent(chargeForecast()?.share) }}</div>
   </div>
 </div>
 

@@ -169,13 +169,17 @@
           t.forecast.days
         }}</span>
         @for (month of columns(); track month.key; let i = $index) {
+          @let sum = charge.columns[i];
+          @let over = sum.days > sum.workingDays;
           <span
             class="pt-time-cell"
             role="cell"
             [class.pt-time-cell--actual]="month.actual"
             [class.pt-time-cell--forecast]="!month.actual"
             [class.sum-cell]="month.folded"
-            >{{ charge.columns[i].days || null | days: false }}</span
+            [class.over]="over"
+            [attr.title]="over ? t.forecast.overWorkingDays : null"
+            >{{ sum.days || null | days: false }}</span
           >
         }
         <span class="pt-cell pt-cell--center" role="cell">{{
@@ -322,6 +326,7 @@
         <input
           #input
           class="pt-grid-input"
+          [class.over]="editable && overMonths().has(month.key)"
           type="text"
           inputmode="decimal"
           autocomplete="off"

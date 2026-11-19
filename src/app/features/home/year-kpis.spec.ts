@@ -62,15 +62,6 @@ describe('yearKpis', () => {
       planned: 11,
       share: 13.5 / (yearWorkingDays - 5),
     });
-    // 2.5 chargeable days in 3 available days (5 working days less 2 out of office), carried on
-    // over the working days left less the 3 out-of-office days still planned for January (5 − 2).
-    const projected = 2.5 + (2.5 / 3) * (yearWorkingDays - 5 - 3);
-    expect(kpis.projection).toEqual({
-      total: projected,
-      share: projected / (yearWorkingDays - 5),
-    });
-    // At the pace so far, the projection's share is the pace: 2.5 of 3 available days.
-    expect(kpis.projection?.share).toBeCloseTo(2.5 / 3);
   });
 
   it('takes a past year as booked, without plans', () => {
@@ -90,7 +81,6 @@ describe('yearKpis', () => {
       chargeable: 3.5,
       available: yearAvailable,
     });
-    expect(kpis.projection).toEqual({ total: 3.5, share: 3.5 / yearAvailable });
   });
 
   it('leaves days on neutral projects out of the available days', () => {
@@ -127,7 +117,6 @@ describe('yearKpis', () => {
     const kpis = yearKpis(2026, [], [], holidays, new Date(2026, 0, 9));
     expect(kpis.booked).toBeNull();
     expect(kpis.forecast).toBeNull();
-    expect(kpis.projection).toBeNull();
     expect(kpis.chargeability).toBeNull();
   });
 

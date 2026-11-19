@@ -145,6 +145,27 @@ describe('Forecast', () => {
     expect(row.querySelectorAll('.pt-cell--center .pt-chip').length).toBe(1);
   });
 
+  it('tints a month of all projects with more days than working days', async () => {
+    const { fixture, element, input } = await render();
+    const daysCells = () => [
+      ...element.querySelectorAll('.pt-row--total')[0].querySelectorAll('.pt-time-cell'),
+    ];
+    expect(element.querySelectorAll('.over').length).toBe(0);
+    // November has 21 working days.
+    const november = input('November')!;
+    november.value = '21.5';
+    november.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+    const [october, nov] = daysCells().slice(9, 11);
+    expect(nov.classList).toContain('over');
+    expect(nov.getAttribute('title')).toBe('More days than working days');
+    expect(october.classList).not.toContain('over');
+    expect(october.getAttribute('title')).toBeNull();
+    // The month's inputs are tinted too; December's stay as they are.
+    expect(november.classList).toContain('over');
+    expect(input('December')!.classList).not.toContain('over');
+  });
+
   it('folds January through a month into one column and back, and keeps the fold', async () => {
     const { fixture, element, input } = await render();
     const heads = () => [...element.querySelectorAll('.pt-row--head .pt-time-head')];

@@ -83,3 +83,12 @@
 .pt-chip--minus-strong.planned {
   background: color-mix(in srgb, var(--delta-minus-strong) 40%, var(--surface));
 }
+
+/*
+ * All projects: a month with more days than working days is tinted red, as light as a planned
+ * red badge, its cell and the inputs of the month (user, 2026-11-19).
+ */
+.pt-time-cell.over,
+.pt-grid-input.over {
+  background: color-mix(in srgb, var(--delta-minus-strong) 40%, var(--surface));
+}

@@ -208,8 +208,10 @@ export const de: Strings = {
     forecast: 'Forecast Jahresende',
     forecastTitle: 'Chargeable Tage bis Jahresende',
     forecastDetail: (booked: string, planned: string) => `${booked} gebucht + ${planned} Forecast`,
-    projection: 'Hochrechnung Jahresende',
-    projectionTitle: 'Im bisherigen Tempo',
+    chargeForecast: 'Forecast %',
+    chargeForecastTitle: 'Monate mit Tagen im Forecast',
+    chargeForecastDetail: (chargeable: string, available: string, months: number) =>
+      `${chargeable}/${available} PT · ${months === 1 ? '1 Monat' : `${months} Monate`}`,
     chargeability: 'Chargeability',
     chargeabilityTitle: 'Chargeable ÷ (Arbeitstage − abwesend − neutral)',
     chargeabilityDetail: (chargeable: string, available: string, target: number) =>
@@ -327,6 +329,7 @@ export const de: Strings = {
     outsideTimeline: (range: string) => `Läuft ${range}`,
     days: 'Alle Projekte',
     daysHint: 'Gebucht, ab diesem Monat Forecast',
+    overWorkingDays: 'Mehr Tage als Arbeitstage',
     workingDays: 'Arbeitstage',
     workingDaysHint: (region: string) => `Mo–Fr ohne Feiertage (${region})`,
     workingDaysHintNoRegion: 'Mo–Fr ohne bundesweite Feiertage',

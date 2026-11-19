@@ -6,7 +6,7 @@ import { isoDate, monthOf, monthsOfYear } from '../../shared/dates/months';
 /**
  * The headline figures of Home for one year, seen from today. Days are person-days.
  *
- * Booked, forecast and projection count only chargeable days: how many chargeable days are
+ * Booked and forecast count only chargeable days: how many chargeable days are
  * booked so far and how many there will likely be at the end of the year (user, 2026-11-11).
  * Non-chargeable and neutral projects and out-of-office days don't count in them.
  *
@@ -34,13 +34,6 @@ export interface YearKpis {
    * booked or planned.
    */
   forecast: { total: number; booked: number; planned: number; share: number | null } | null;
-  /**
-   * Chargeable days at the end of the year at the pace so far: the chargeable days per
-   * available day from January 1 to the last booked day, carried on over the available days
-   * left. The share is of the year's available days, as for the forecast. Null when nothing is
-   * booked.
-   */
-  projection: { total: number; share: number | null } | null;
   /**
    * Chargeable days booked from January 1 to the end of the current month (a past year: the
    * whole year), divided by the available days in that time. Days without a booking count as
@@ -87,8 +80,6 @@ export function yearKpis(
   const soFar = none();
   /** Days booked in the time of chargeability (up to `chargeEnd`). */
   const period = none();
-  /** The last day with a booking up to `end`, work or out of office; '' for none. */
-  let lastBooked = '';
   /** Days booked before the current month. */
   const before = none();
   /** Days booked per order and month (`orderId|YYYY-MM`) from the current month on. */
@@ -114,9 +105,7 @@ export function yearKpis(
       bookedLater.set(key, later);
     }
     if (booking.date <= chargeEnd) add(period);
-    if (booking.date > end) continue;
-    if (booking.date > lastBooked) lastBooked = booking.date;
-    add(soFar);
+    if (booking.date <= end) add(soFar);
   }
 
   // From the current month on, each order counts its plan, or its bookings where they are more.
@@ -156,35 +145,15 @@ export function yearKpis(
         }
       : null;
 
-  // The pace of the projection: available days up to the last booked day.
-  const available = lastBooked
-    ? Math.max(0, workingDaysBetween(start, lastBooked, holidays) - off(soFar))
-    : 0;
   const yearAvailable = Math.max(
     0,
     workingDaysBetween(start, yearEnd, holidays) - off(before) - off(later),
   );
   const share = (days: number, of: number) => (of > 0 ? days / of : null);
 
-  // The projection goes on at the pace so far: chargeable days per available day up to the last
-  // booked day, over the available days left in the year. Out-of-office and neutral days count
-  // on neither side: those so far are out of the pace, those booked or planned later out of the
-  // days left (user, 2026-11-10; before, a planned vacation was projected as worked). A year
-  // that is over ends as booked.
-  const yearWorking = workingDaysBetween(start, yearEnd, holidays);
-  const workedSoFar = lastBooked ? workingDaysBetween(start, lastBooked, holidays) : 0;
-  const offLater = Math.max(0, off(before) + off(later) - off(soFar));
-  const left = todayIso > yearEnd ? 0 : Math.max(0, yearWorking - workedSoFar - offLater);
-  const projected =
-    soFar.work > 0 && available > 0
-      ? soFar.chargeable + (soFar.chargeable / available) * left
-      : null;
-
   return {
     booked:
       soFar.work > 0 ? { days: soFar.chargeable, share: chargeability?.share ?? null } : null,
-    projection:
-      projected === null ? null : { total: projected, share: share(projected, yearAvailable) },
     forecast:
       before.work + later.work > 0
         ? {

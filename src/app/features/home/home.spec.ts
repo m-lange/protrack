@@ -61,11 +61,13 @@ describe('Home', () => {
     // Chargeability, Jan 1 – Nov 30 (the end of this month): 232 working days without
     // nationwide holidays, 1 out of office; days without a booking count as non-chargeable.
     // Year-end: October 1 booked, November 8 planned over 1 booked, December 4 planned.
-    // Projection: 2 days in 213 working days to Nov 3 (the last booked day), carried on: 2.4.
-    expect(values()).toEqual(['2 days', '13 days', '2 days', '1\u00a0%']);
+    // Chargeability forecast over November and December, the planned months: 12 chargeable of
+    // 21 + 21 working days (Christmas on Friday, December 24 and 31 half days off).
+    expect(values()).toEqual(['2 days', '1 %', '13 days', '29 %']);
     expect(targets()).toEqual(['below', 'below', 'below', 'below']);
-    expect(titles()[1]).toContain('\n2 booked + 11 planned');
-    expect(titles()[3]).toContain('\n2/231 d · target 80%');
+    expect(titles()[2]).toContain('\n2 booked + 11 planned');
+    expect(titles()[3]).toContain('\n12/42 d \u00b7 2 months');
+    expect(titles()[1]).toContain('\n2/231 d · target 80%');
   });
 
   it('shows the charts and the budget overview once there are projects', async () => {
@@ -85,9 +87,7 @@ describe('Home', () => {
     expect(charge.querySelector('.chart__target')?.textContent).toContain('Target 80\u00a0%');
     expect(charge.querySelector('.pt-legend')?.textContent).not.toContain('Target');
     const budgets = element.querySelector('app-budget-overview')!;
-    expect(budgets.querySelector('.pt-budget-bar')?.getAttribute('title')).toBe(
-      'risk: 5/20 d',
-    );
+    expect(budgets.querySelector('.pt-budget-bar')?.getAttribute('title')).toBe('risk: 5/20 d');
     const locations = element.querySelector('app-location-chart')!;
     expect(locations.querySelectorAll('.pt-bar').length).toBe(13);
     expect(locations.querySelectorAll('.pt-target-line').length).toBe(2);
@@ -102,7 +102,8 @@ describe('Home', () => {
       { id: 'b1', orderId: 'mapping', date: '2026-11-02', days: 1 },
     ]);
     const { values } = await render();
-    expect(values()).toEqual(['1 day', '1 day', '1 day', '0\u00a0%']);
+    // Nothing planned: no chargeability forecast.
+    expect(values()).toEqual(['1 day', '0 %', '1 day', '–']);
   });
 
   it('colors the tiles against the chargeability target', async () => {
@@ -124,14 +125,15 @@ describe('Home', () => {
     const settings = TestBed.inject(SettingsStore);
     settings.set({ ...defaultSettings(), chargeabilityTarget: 2 });
     const { fixture, targets } = await render();
-    // Booked 5 of 216 days (2%), the year-end forecast 5 of 254 (2%), chargeability 4 of 216 (2%).
-    expect(targets()).toEqual(['met', 'met', 'met', 'met']);
+    // Booked 5 of 216 days (2%), the year-end forecast 5 of 254 (2%), chargeability 4 of 216 (2%);
+    // nothing is planned, so the chargeability forecast stays neutral.
+    expect(targets()).toEqual(['met', 'met', 'met', null]);
     settings.set({ ...defaultSettings(), chargeabilityTarget: 12 });
     await fixture.whenStable();
-    expect(targets()).toEqual(['near', 'near', 'near', 'near']);
+    expect(targets()).toEqual(['near', 'near', 'near', null]);
     settings.set({ ...defaultSettings(), chargeabilityTarget: 13 });
     await fixture.whenStable();
-    expect(targets()).toEqual(['below', 'below', 'below', 'below']);
+    expect(targets()).toEqual(['below', 'below', 'below', null]);
   });
 
   it('follows the year picked in the top bar', async () => {
@@ -147,8 +149,8 @@ describe('Home', () => {
     TestBed.inject(SelectedYear).previous();
     await fixture.whenStable();
     expect(element.querySelector('.pt-kpi__label')?.textContent).toBe('Booked 2025');
-    // A past year ends as booked: forecast and projection equal the booked days.
-    expect(values().slice(0, 3)).toEqual(['3 days', '3 days', '3 days']);
+    // A past year ends as booked: the forecast equals the booked days.
+    expect([values()[0], values()[2]]).toEqual(['3 days', '3 days']);
     const charge = element.querySelector('app-chargeability-chart')!;
     expect(charge.querySelectorAll('.pt-bar__mark--forecast').length).toBe(0);
   });
