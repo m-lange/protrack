@@ -88,25 +88,9 @@ export class Shortcuts {
 
     const target = event.target instanceof HTMLElement ? event.target : null;
     if (event.key === 'PageUp' || event.key === 'PageDown') {
-      if (inList(target) || target instanceof HTMLTextAreaElement) return;
-      if (target instanceof HTMLSelectElement || target?.isContentEditable) return;
-      if (target instanceof HTMLInputElement) {
-        if (!page.stepFromFields) return;
-        target.blur();
-      }
-      event.preventDefault();
-      const back = event.key === 'PageUp';
-      if (event.shiftKey) {
-        if (back) this.selectedYear.previous();
-        else this.selectedYear.next();
-      } else if (back) {
-        (page.previous ?? (() => this.selectedYear.previous()))();
-      } else {
-        (page.next ?? (() => this.selectedYear.next()))();
-      }
+      this.step(event, page, target);
       return;
     }
-
     if (
       event.key === 'Escape' &&
       page.cancel &&
@@ -121,17 +105,41 @@ export class Shortcuts {
     if (isField(target) || inList(target) || event.repeat) return;
     const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
 
-    if (this.goPressedAt && Date.now() - this.goPressedAt < SEQUENCE_MS) {
-      this.goPressedAt = 0;
-      const to = GO_TO[key];
-      if (!to) return;
-      event.preventDefault();
-      if (to.resetYear) this.selectedYear.reset();
-      void this.router.navigateByUrl(to.link);
-      return;
-    }
+    const afterGo = this.goPressedAt > 0 && Date.now() - this.goPressedAt < SEQUENCE_MS;
     this.goPressedAt = 0;
+    if (afterGo) this.goTo(event, key);
+    else this.pageKey(event, key, page);
+  }
 
+  /**
+   * Page up and Page down: the page's own step, else the year before or after; with Shift always
+   * the year. From a text field only where the page asks for it.
+   */
+  private step(event: KeyboardEvent, page: PageActions, target: HTMLElement | null): void {
+    if (inList(target) || target instanceof HTMLTextAreaElement) return;
+    if (target instanceof HTMLSelectElement || target?.isContentEditable) return;
+    if (target instanceof HTMLInputElement) {
+      if (!page.stepFromFields) return;
+      target.blur();
+    }
+    event.preventDefault();
+    const back = event.key === 'PageUp';
+    const year = back ? () => this.selectedYear.previous() : () => this.selectedYear.next();
+    const own = back ? page.previous : page.next;
+    (event.shiftKey ? year : (own ?? year))();
+  }
+
+  /** The letter after "g": goes to its page. */
+  private goTo(event: KeyboardEvent, key: string): void {
+    const to = GO_TO[key];
+    if (!to) return;
+    event.preventDefault();
+    if (to.resetYear) this.selectedYear.reset();
+    void this.router.navigateByUrl(to.link);
+  }
+
+  /** The single keys: "g" starts a sequence, "?" lists the shortcuts, the rest act on the page. */
+  private pageKey(event: KeyboardEvent, key: string, page: PageActions): void {
     switch (key) {
       case 'g':
         if (event.shiftKey) return;

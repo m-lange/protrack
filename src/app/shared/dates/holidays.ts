@@ -59,7 +59,7 @@ export function daysOff(
 }
 
 /** The share of a day that is off, 0 to 1. */
-export function offShare(off: DaysOff, date: string): number {
+function offShare(off: DaysOff, date: string): number {
   return 'get' in off ? (off.get(date) ?? 0) : off.has(date) ? 1 : 0;
 }
 

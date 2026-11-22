@@ -8,7 +8,7 @@ import { TODAY } from './today';
  * starts to the year the last one ends, and at least the current year (user, 2026-11-16).
  * Open-booking orders have no timeline and add no year.
  */
-export function selectableYears(projects: readonly Project[], currentYear: number): number[] {
+function selectableYears(projects: readonly Project[], currentYear: number): number[] {
   let first = currentYear;
   let last = currentYear;
   for (const project of projects) {

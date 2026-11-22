@@ -8,7 +8,7 @@ import { runsIn } from './data/orders';
 export type TargetStatus = 'met' | 'near' | 'below';
 
 /** How many percentage points below the target a share is still near it (yellow, not red). */
-export const TARGET_NEAR_POINTS = 10;
+const TARGET_NEAR_POINTS = 10;
 
 /**
  * Compares a share (0–1) with the chargeability target in percent: at or above the target it is

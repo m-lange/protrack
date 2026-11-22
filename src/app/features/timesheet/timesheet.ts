@@ -552,8 +552,6 @@ export class Timesheet {
     return days ? formatHours(days) : '';
   }
 
-  // Changes ------------------------------------------------------------------------------------
-
   /**
    * Saves the hours typed into a row, rounded up to a half hour, as days. A row without an
    * order keeps them until one is picked. Anything that is not a number of hours is undone, and
@@ -683,8 +681,6 @@ export class Timesheet {
     this.removeRow(date, draft);
   }
 
-  // Notes --------------------------------------------------------------------------------------
-
   protected note(date: string): string {
     return this.dayNotes.of(date);
   }
@@ -709,8 +705,6 @@ export class Timesheet {
     if (this.locked()) return;
     await this.dayNotes.save(date, text);
   }
-
-  // Keyboard -----------------------------------------------------------------------------------
 
   /**
    * Moves between the hour fields like in a spreadsheet: up and down, Enter and Shift+Enter to

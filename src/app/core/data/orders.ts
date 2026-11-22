@@ -1,5 +1,5 @@
 import { monthOf } from '../../shared/dates/months';
-import { Booking, Location, MonthKey, Order } from './model';
+import { Booking, Location, MonthKey, Order, Project } from './model';
 
 /**
  * The timeline of orders in one place. Orders of open-booking projects have none: they take
@@ -38,6 +38,15 @@ export function runsIn(order: Order, month: MonthKey): boolean {
 /** Sorts orders by start date, then by name; orders without a timeline by name. */
 export function compareOrders(a: Order, b: Order): number {
   return (a.start ?? '').localeCompare(b.start ?? '') || a.name.localeCompare(b.name);
+}
+
+/** Every order of the projects by its id, with its project: what a booking belongs to. */
+export function ordersById(
+  projects: readonly Project[],
+): Map<string, { project: Project; order: Order }> {
+  return new Map(
+    projects.flatMap((project) => project.orders.map((order) => [order.id, { project, order }])),
+  );
 }
 
 /** Where a booked day was worked: the booking's own location, else its order's. */

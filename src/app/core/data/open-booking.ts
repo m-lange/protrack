@@ -9,7 +9,7 @@ import { compareOrders } from './orders';
  */
 
 /** The id of the one order of an open-booking project that had none: stable across loads. */
-export function openOrderId(projectId: string): string {
+function openOrderId(projectId: string): string {
   return `${projectId}-booking`;
 }
 

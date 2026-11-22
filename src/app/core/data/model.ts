@@ -93,7 +93,6 @@ export const PROJECT_COLOR_PRESETS = [
   'blue',
   'amber',
 ] as const;
-export type ProjectColorPreset = (typeof PROJECT_COLOR_PRESETS)[number];
 
 /** A custom project color: `#rrggbb`. */
 export const HEX_COLOR = /^#[0-9a-f]{6}$/i;

@@ -1,5 +1,5 @@
-import { Booking, Project } from '../../core/data/model';
-import { locationOf } from '../../core/data/orders';
+import { Booking, MonthKey, Project } from '../../core/data/model';
+import { locationOf, ordersById } from '../../core/data/orders';
 import { DaysOff, workingDaysBetween } from '../../shared/dates/holidays';
 import { isoDate, monthOf, monthsOfYear } from '../../shared/dates/months';
 
@@ -55,6 +55,8 @@ const none = (): Split => ({ work: 0, away: 0, chargeable: 0, neutral: 0 });
 /** The days that aren't available for chargeable work: out of office and neutral. */
 const off = (split: Split) => split.away + split.neutral;
 
+type Orders = ReturnType<typeof ordersById>;
+
 /** Works out the Home KPIs of `year` from the projects and bookings, as of `today`. */
 export function yearKpis(
   year: number,
@@ -72,63 +74,16 @@ export function yearKpis(
   const monthEnd = isoDate(new Date(today.getFullYear(), today.getMonth() + 1, 0));
   const chargeEnd = monthEnd < yearEnd ? monthEnd : yearEnd;
 
-  const orders = new Map(
-    projects.flatMap((project) => project.orders.map((order) => [order.id, { project, order }])),
-  );
-
-  /** Days booked so far (up to `end`). */
-  const soFar = none();
-  /** Days booked in the time of chargeability (up to `chargeEnd`). */
-  const period = none();
-  /** Days booked before the current month. */
-  const before = none();
-  /** Days booked per order and month (`orderId|YYYY-MM`) from the current month on. */
-  const bookedLater = new Map<string, Split>();
-  for (const booking of bookings) {
-    const entry = orders.get(booking.orderId);
-    if (!entry || booking.date < start || booking.date > yearEnd) continue;
-    const away = locationOf(booking, entry.order) === 'ooo';
-    // Out of office never counts as chargeable, whatever the project's billing.
-    const chargeable = !away && entry.project.billing === 'chargeable';
-    const neutral = !away && entry.project.billing === 'neutral';
-    const add = (split: Split) => {
-      split[away ? 'away' : 'work'] += booking.days;
-      if (chargeable) split.chargeable += booking.days;
-      if (neutral) split.neutral += booking.days;
-    };
-    const month = monthOf(booking.date);
-    if (month < currentMonth) add(before);
-    else {
-      const key = `${booking.orderId}|${month}`;
-      const later = bookedLater.get(key) ?? none();
-      add(later);
-      bookedLater.set(key, later);
-    }
-    if (booking.date <= chargeEnd) add(period);
-    if (booking.date <= end) add(soFar);
-  }
-
-  // From the current month on, each order counts its plan, or its bookings where they are more.
-  const later = none();
+  const orders = ordersById(projects);
+  const { soFar, period, before, bookedLater } = bookedDays(bookings, orders, {
+    start,
+    yearEnd,
+    end,
+    chargeEnd,
+    currentMonth,
+  });
   const laterMonths = monthsOfYear(year).filter((month) => month >= currentMonth);
-  for (const { project, order } of orders.values()) {
-    for (const month of laterMonths) {
-      const planned = order.forecast[month] ?? 0;
-      const booked = bookedLater.get(`${order.id}|${month}`) ?? none();
-      if (booked.work + booked.away > planned) {
-        // The bookings count, where they were worked.
-        later.work += booked.work;
-        later.away += booked.away;
-        later.chargeable += booked.chargeable;
-        later.neutral += booked.neutral;
-      } else if (order.location === 'ooo') later.away += planned;
-      else {
-        later.work += planned;
-        if (project.billing === 'chargeable') later.chargeable += planned;
-        if (project.billing === 'neutral') later.neutral += planned;
-      }
-    }
-  }
+  const later = laterDays(orders, bookedLater, laterMonths);
   const total = before.chargeable + later.chargeable;
 
   // Chargeability: every available day up to the end of the current month counts, booked or not.
@@ -152,8 +107,7 @@ export function yearKpis(
   const share = (days: number, of: number) => (of > 0 ? days / of : null);
 
   return {
-    booked:
-      soFar.work > 0 ? { days: soFar.chargeable, share: chargeability?.share ?? null } : null,
+    booked: soFar.work > 0 ? { days: soFar.chargeable, share: chargeability?.share ?? null } : null,
     forecast:
       before.work + later.work > 0
         ? {
@@ -165,4 +119,75 @@ export function yearKpis(
         : null,
     chargeability,
   };
+}
+
+/**
+ * The year's booked days, counted four ways: so far (up to `end`), in the time of chargeability
+ * (up to `chargeEnd`), before the current month, and from the current month on per order and
+ * month (`orderId|YYYY-MM`).
+ */
+function bookedDays(
+  bookings: readonly Booking[],
+  orders: Orders,
+  dates: { start: string; yearEnd: string; end: string; chargeEnd: string; currentMonth: MonthKey },
+): { soFar: Split; period: Split; before: Split; bookedLater: Map<string, Split> } {
+  const soFar = none();
+  const period = none();
+  const before = none();
+  const bookedLater = new Map<string, Split>();
+  for (const booking of bookings) {
+    const entry = orders.get(booking.orderId);
+    if (!entry || booking.date < dates.start || booking.date > dates.yearEnd) continue;
+    const away = locationOf(booking, entry.order) === 'ooo';
+    // Out of office never counts as chargeable, whatever the project's billing.
+    const chargeable = !away && entry.project.billing === 'chargeable';
+    const neutral = !away && entry.project.billing === 'neutral';
+    const add = (split: Split) => {
+      split[away ? 'away' : 'work'] += booking.days;
+      if (chargeable) split.chargeable += booking.days;
+      if (neutral) split.neutral += booking.days;
+    };
+    const month = monthOf(booking.date);
+    if (month < dates.currentMonth) add(before);
+    else {
+      const key = `${booking.orderId}|${month}`;
+      const later = bookedLater.get(key) ?? none();
+      add(later);
+      bookedLater.set(key, later);
+    }
+    if (booking.date <= dates.chargeEnd) add(period);
+    if (booking.date <= dates.end) add(soFar);
+  }
+  return { soFar, period, before, bookedLater };
+}
+
+/**
+ * The days of the months from the current one on: each order counts its plan, or its bookings
+ * (`bookedLater`, see `bookedDays`) where they are more.
+ */
+function laterDays(
+  orders: Orders,
+  bookedLater: ReadonlyMap<string, Split>,
+  months: readonly MonthKey[],
+): Split {
+  const later = none();
+  for (const { project, order } of orders.values()) {
+    for (const month of months) {
+      const planned = order.forecast[month] ?? 0;
+      const booked = bookedLater.get(`${order.id}|${month}`) ?? none();
+      if (booked.work + booked.away > planned) {
+        // The bookings count, where they were worked.
+        later.work += booked.work;
+        later.away += booked.away;
+        later.chargeable += booked.chargeable;
+        later.neutral += booked.neutral;
+      } else if (order.location === 'ooo') later.away += planned;
+      else {
+        later.work += planned;
+        if (project.billing === 'chargeable') later.chargeable += planned;
+        if (project.billing === 'neutral') later.neutral += planned;
+      }
+    }
+  }
+  return later;
 }

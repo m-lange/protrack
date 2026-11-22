@@ -39,11 +39,6 @@ export function monthsOfYear(year: number): MonthKey[] {
   return Array.from({ length: 12 }, (_, month) => monthKey(year, month));
 }
 
-/** Whether a month lies in the date range `start`–`end` (ISO dates), at least for one day. */
-export function monthInRange(month: MonthKey, start: string, end: string): boolean {
-  return monthOf(start) <= month && month <= monthOf(end);
-}
-
 /** How much of the range `start`–`end` (ISO dates, both included) has passed by `today`, 0–100. */
 export function elapsedPercent(start: string, end: string, today: Date): number {
   const from = parseIsoDate(start).getTime();

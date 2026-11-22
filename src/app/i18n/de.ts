@@ -23,7 +23,6 @@ export const de: Strings = {
   },
 
   formats: {
-    today: 'fullDate',
     dateTime: 'd. MMM y, HH:mm',
     /** "1. Sept." */
     dayMonth: 'd. MMM',
@@ -39,7 +38,6 @@ export const de: Strings = {
 
   common: {
     cancel: 'Abbrechen',
-    save: 'Speichern',
     ok: 'OK',
     close: 'Schließen',
     empty: '–',

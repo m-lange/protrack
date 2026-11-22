@@ -216,8 +216,14 @@ function normalizeProjects(raw: unknown, customerIds: Set<string>, now: string):
       updatedAt: isIsoDate(item['updatedAt']) ? item['updatedAt'] : now,
     });
   }
-  // Each customer's projects are numbered 0, 1, 2… in their order; those without a place go
-  // last, by name.
+  return numberProjects(projects);
+}
+
+/**
+ * Numbers each customer's projects 0, 1, 2… in their order; those without a place go last, by
+ * name.
+ */
+function numberProjects(projects: Project[]): Project[] {
   projects.sort(
     (a, b) => a.order - b.order || a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
   );

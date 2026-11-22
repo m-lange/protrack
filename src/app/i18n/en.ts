@@ -25,7 +25,6 @@ export const en = {
 
   /** Date formats for Angular's DatePipe, see https://angular.dev/api/common/DatePipe. */
   formats: {
-    today: 'fullDate',
     dateTime: 'MMM d, y, h:mm a',
     /** A day in a timeline: "Sep 1". */
     dayMonth: 'MMM d',
@@ -41,7 +40,6 @@ export const en = {
 
   common: {
     cancel: 'Cancel',
-    save: 'Save',
     ok: 'OK',
     close: 'Close',
     /** An empty value, also the placeholder of empty number inputs. */

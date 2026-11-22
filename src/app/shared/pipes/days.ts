@@ -1,5 +1,5 @@
 /** Working hours in one person-day: the timesheet takes hours and keeps days. */
-export const HOURS_PER_DAY = 8;
+const HOURS_PER_DAY = 8;
 
 /**
  * The decimal separator of the UI language: "." in English, "," in German. The Language

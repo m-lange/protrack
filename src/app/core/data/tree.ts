@@ -1,24 +1,18 @@
 import { OrderBookings } from './booking-store';
 import { Customer, MonthKey, Order, Project, ProjectStatus } from './model';
-import { runsIn, timelineOf } from './orders';
-
-/** A date range of ISO dates, both days included. */
-export interface DateSpan {
-  start: string;
-  end: string;
-}
+import { Timeline, runsIn, timelineOf } from './orders';
 
 export interface ProjectNode {
   project: Project;
   /** The orders shown, by start date. */
   orders: Order[];
-  span: DateSpan | null;
+  span: Timeline | null;
 }
 
 export interface CustomerNode {
   customer: Customer;
   projects: ProjectNode[];
-  span: DateSpan | null;
+  span: Timeline | null;
 }
 
 export interface TreeOptions {
@@ -66,13 +60,13 @@ export function buildTree(
 }
 
 /** An order's timeline as a list of none or one, for flatMap. */
-function timelineOrNone(order: Order): DateSpan[] {
+function timelineOrNone(order: Order): Timeline[] {
   const timeline = timelineOf(order);
   return timeline ? [timeline] : [];
 }
 
 /** The range from the earliest start to the latest end, or null for none. */
-export function spanOf(spans: readonly DateSpan[]): DateSpan | null {
+export function spanOf(spans: readonly Timeline[]): Timeline | null {
   if (spans.length === 0) return null;
   let { start, end } = spans[0];
   for (const span of spans) {

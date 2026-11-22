@@ -51,23 +51,7 @@ export function forecastCopy(
   const months = Array.from({ length: MONTHS }, (_, i) => today.getMonth() + i)
     .filter((month) => month < 12)
     .map((month) => monthKey(year, month));
-  const rows: { name: string; days: number[] }[] = [];
-  for (const node of buildTree(customers, projects, 'active')) {
-    for (const { project, orders } of node.projects) {
-      for (const place of ['onsite', 'remote'] as const) {
-        const days = months.map((month) => {
-          let total = 0;
-          for (const order of orders) {
-            if (PLACES[order.location] === place && runsIn(order, month)) {
-              total += order.forecast[month] ?? 0;
-            }
-          }
-          return total;
-        });
-        if (days.some((d) => d > 0)) rows.push({ name: texts.row(project.name, place), days });
-      }
-    }
-  }
+  const rows = plannedRows(customers, projects, months, texts);
   if (!rows.length) return null;
 
   const heads = months.map(texts.month);
@@ -98,6 +82,33 @@ export function forecastCopy(
     .map((line) => line.join('\t'))
     .join('\n');
   return { html, text };
+}
+
+/** A row per project and place with planned days in the months, in the order of My projects. */
+function plannedRows(
+  customers: Customer[],
+  projects: Project[],
+  months: readonly MonthKey[],
+  texts: ForecastCopyTexts,
+): { name: string; days: number[] }[] {
+  const rows: { name: string; days: number[] }[] = [];
+  for (const node of buildTree(customers, projects, 'active')) {
+    for (const { project, orders } of node.projects) {
+      for (const place of ['onsite', 'remote'] as const) {
+        const days = months.map((month) => {
+          let total = 0;
+          for (const order of orders) {
+            if (PLACES[order.location] === place && runsIn(order, month)) {
+              total += order.forecast[month] ?? 0;
+            }
+          }
+          return total;
+        });
+        if (days.some((d) => d > 0)) rows.push({ name: texts.row(project.name, place), days });
+      }
+    }
+  }
+  return rows;
 }
 
 function escape(text: string): string {

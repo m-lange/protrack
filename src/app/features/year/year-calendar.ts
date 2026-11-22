@@ -1,5 +1,5 @@
-import { Booking, Order, Project } from '../../core/data/model';
-import { locationOf } from '../../core/data/orders';
+import { Booking, Project } from '../../core/data/model';
+import { locationOf, ordersById } from '../../core/data/orders';
 import { HolidayId } from '../../shared/dates/holidays';
 import { isoDate } from '../../shared/dates/months';
 
@@ -46,17 +46,6 @@ export interface CalendarMonth {
 /** Six weeks: every month fits, and all months are equally tall. */
 const CELLS = 42;
 
-/** What every booking belongs to, by order id. */
-export function orderIndex(
-  projects: readonly Project[],
-): Map<string, { project: Project; order: Order }> {
-  const index = new Map<string, { project: Project; order: Order }>();
-  for (const project of projects) {
-    for (const order of project.orders) index.set(order.id, { project, order });
-  }
-  return index;
-}
-
 /**
  * The entries per day of a year: the bookings summed per project, work apart from absence.
  * Bookings of unknown orders are left out.
@@ -66,7 +55,7 @@ export function entriesByDate(
   bookings: readonly Booking[],
   projects: readonly Project[],
 ): Map<string, DayEntry[]> {
-  const orders = orderIndex(projects);
+  const orders = ordersById(projects);
   const prefix = `${year}-`;
   const byDate = new Map<string, Map<string, DayEntry>>();
   for (const booking of bookings) {
