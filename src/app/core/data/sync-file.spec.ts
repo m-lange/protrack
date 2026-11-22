@@ -1,5 +1,6 @@
 import { emptyData } from './model';
 import {
+  MAX_LOGO_LENGTH,
   SCHEMA_VERSION,
   SyncFileError,
   SyncFileProblem,
@@ -80,6 +81,23 @@ describe('sync file', () => {
       lockedMonths: [],
       yearEndDaysOff: 50,
     });
+  });
+
+  it('drops a logo longer than an uploaded one can be', () => {
+    const logo = (length: number) => 'data:image/png;base64,'.padEnd(length, 'A');
+    const text = JSON.stringify({
+      format: 'protrack',
+      schemaVersion: SCHEMA_VERSION,
+      savedAt: '2026-11-06T10:00:00.000Z',
+      data: {
+        customers: [
+          { id: 'a', name: 'Silberbach Bank', order: 0, logo: logo(MAX_LOGO_LENGTH) },
+          { id: 'b', name: 'Kranich Logistik', order: 1, logo: logo(MAX_LOGO_LENGTH + 1) },
+        ],
+      },
+    });
+    const { data } = parseSyncFile(text);
+    expect(data.customers.map((c) => c.logo?.length ?? null)).toEqual([MAX_LOGO_LENGTH, null]);
   });
 
   it('repairs projects, orders and bookings', () => {

@@ -39,6 +39,13 @@ const LOCATION_IDS: readonly Location[] = [...WORK_LOCATION_IDS, 'ooo'];
  */
 export const SCHEMA_VERSION = 1;
 
+/**
+ * The longest logo a file may bring, in characters of its data URL. An uploaded logo is a file
+ * of at most 1 MB (`MAX_LOGO_BYTES` in logo-file.ts), about 1.4 million characters; a longer one
+ * never came from ProTrack and would bloat IndexedDB, the backup file and every restore point.
+ */
+export const MAX_LOGO_LENGTH = 2 * 1024 * 1024;
+
 /** The JSON file ProTrack writes as backup, export and transfer between machines. */
 export interface SyncFile {
   format: 'protrack';
@@ -334,7 +341,11 @@ function percent(value: unknown, fallback: number): number {
 }
 
 function isLogo(value: unknown): value is string {
-  return typeof value === 'string' && LOGO_TYPES.some((type) => value.startsWith(`data:${type};`));
+  return (
+    typeof value === 'string' &&
+    value.length <= MAX_LOGO_LENGTH &&
+    LOGO_TYPES.some((type) => value.startsWith(`data:${type};`))
+  );
 }
 
 function isIsoDate(value: unknown): value is string {
