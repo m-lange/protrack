@@ -71,11 +71,7 @@
   flex: none;
   min-width: 10px;
   margin-left: 0;
-  background: repeating-linear-gradient(
-    135deg,
-    var(--track) 0 2px,
-    var(--row-color) 2px 5px
-  );
+  background: repeating-linear-gradient(135deg, var(--track) 0 2px, var(--row-color) 2px 5px);
 }
 
 .empty {

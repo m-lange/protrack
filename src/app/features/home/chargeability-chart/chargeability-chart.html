@@ -13,12 +13,9 @@
             [attr.title]="bar.title"
             [attr.aria-label]="bar.title"
           >
-            <span
-              class="pt-bar__label"
-              [class.pt-bar__label--over]="bar.over"
-              aria-hidden="true"
-              >{{ bar.value }}</span
-            >
+            <span class="pt-bar__label" [class.pt-bar__label--over]="bar.over" aria-hidden="true">{{
+              bar.value
+            }}</span>
             <span
               class="pt-bar__mark"
               [class.pt-bar__mark--forecast]="bar.forecast"
