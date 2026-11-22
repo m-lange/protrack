@@ -15,7 +15,6 @@ import chevronUp from '../../../icons/chevron-up.svg';
 import close from '../../../icons/close.svg';
 import copy from '../../../icons/copy.svg';
 import customer from '../../../icons/customer.svg';
-import done from '../../../icons/done.svg';
 import download from '../../../icons/download.svg';
 import edit from '../../../icons/edit.svg';
 import forecast from '../../../icons/forecast.svg';
@@ -55,7 +54,6 @@ export const ICONS = {
   close,
   copy,
   customer,
-  done,
   download,
   edit,
   forecast,
