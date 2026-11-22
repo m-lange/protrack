@@ -43,7 +43,7 @@
     <li class="pt-target__label pt-target__label--item">
       <span class="pt-target__swatch" [style.--segment-color]="segment.color"></span>
       {{ segment.label }}
-      <strong class="pt-num">{{ segment.value }}%</strong>
+      <strong class="pt-num">{{ t.splitSlider.share(segment.value) }}</strong>
     </li>
   }
 </ul>

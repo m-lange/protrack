@@ -101,6 +101,7 @@ export const de: Strings = {
     handle: (left: string, right: string) => `Aufteilung zwischen ${left} und ${right}`,
     valueText: (left: string, leftValue: number, right: string, rightValue: number) =>
       `${left} ${leftValue} %, ${right} ${rightValue} %`,
+    share: (value: number) => `${value}%`,
   },
 
   months: [

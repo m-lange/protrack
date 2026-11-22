@@ -32,7 +32,7 @@
 }
 
 .plot:focus-visible {
-  box-shadow: var(--focus-halo);
+  box-shadow: var(--shadow-focus-halo);
 }
 
 /* The lines stretch with the plot; their strokes stay 2px (non-scaling). */

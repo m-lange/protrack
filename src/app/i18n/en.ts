@@ -112,6 +112,8 @@ export const en = {
     handle: (left: string, right: string) => `Split between ${left} and ${right}`,
     valueText: (left: string, leftValue: number, right: string, rightValue: number) =>
       `${left} ${leftValue}%, ${right} ${rightValue}%`,
+    /** A share in the legend below the bar: "30%". */
+    share: (value: number) => `${value}%`,
   },
 
   months: [
