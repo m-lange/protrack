@@ -45,7 +45,6 @@ export const en = {
     /** An empty value, also the placeholder of empty number inputs. */
     empty: '–',
     breadcrumb: 'Breadcrumb',
-    notBuilt: 'This page is not built yet.',
     customerCount: (n: number) => (n === 1 ? '1 account' : `${n} accounts`),
     projectCount: (n: number) =>
       n === 0 ? 'No projects' : n === 1 ? '1 project' : `${n} projects`,

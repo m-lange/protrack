@@ -42,7 +42,6 @@ export const de: Strings = {
     close: 'Schließen',
     empty: '–',
     breadcrumb: 'Brotkrumennavigation',
-    notBuilt: 'Diese Seite gibt es noch nicht.',
     customerCount: (n: number) => (n === 1 ? '1 Account' : `${n} Accounts`),
     projectCount: (n: number) =>
       n === 0 ? 'Keine Projekte' : n === 1 ? '1 Projekt' : `${n} Projekte`,
