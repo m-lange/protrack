@@ -14,6 +14,13 @@ import { openOrder } from '../../../core/data/open-booking';
 import { runsBetween, runsIn, timelineOf } from '../../../core/data/orders';
 import { ProjectStore } from '../../../core/data/project-store';
 import { SettingsStore } from '../../../core/data/settings-store';
+import {
+  CustomerNode,
+  ForecastFigures,
+  buildTree,
+  orderForecast,
+  sumForecasts,
+} from '../../../core/data/tree';
 import { SelectedYear } from '../../../core/selected-year';
 import { TODAY } from '../../../core/today';
 import { STRINGS } from '../../../i18n/strings';
@@ -25,7 +32,6 @@ import { DateRangePipe } from '../../../shared/pipes/date-range-pipe';
 import { formatDays, parseDays } from '../../../shared/pipes/days';
 import { DaysPipe } from '../../../shared/pipes/days-pipe';
 import { DeltaPipe, deltaChip } from '../../../shared/pipes/delta-pipe';
-import { CustomerNode, ForecastFigures, buildTree, orderForecast, sumForecasts } from '../tree';
 import { TreeState, customerKey, projectKey } from '../tree-state';
 
 /**

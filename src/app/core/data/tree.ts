@@ -1,6 +1,6 @@
-import { OrderBookings } from '../../core/data/booking-store';
-import { Customer, MonthKey, Order, Project, ProjectStatus } from '../../core/data/model';
-import { runsIn, timelineOf } from '../../core/data/orders';
+import { OrderBookings } from './booking-store';
+import { Customer, MonthKey, Order, Project, ProjectStatus } from './model';
+import { runsIn, timelineOf } from './orders';
 
 /** A date range of ISO dates, both days included. */
 export interface DateSpan {

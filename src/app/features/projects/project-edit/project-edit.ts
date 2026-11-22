@@ -33,6 +33,7 @@ import {
 } from '../../../core/data/model';
 import { OrderDraft, ProjectStore } from '../../../core/data/project-store';
 import { SettingsStore } from '../../../core/data/settings-store';
+import { spanOf } from '../../../core/data/tree';
 import { Shortcuts } from '../../../core/shortcuts';
 import { TODAY } from '../../../core/today';
 import { STRINGS } from '../../../i18n/strings';
@@ -43,7 +44,6 @@ import { LocationSelect } from '../../../shared/location-select/location-select'
 import { DateRangePipe } from '../../../shared/pipes/date-range-pipe';
 import { formatDays, parseDays } from '../../../shared/pipes/days';
 import { DaysPipe } from '../../../shared/pipes/days-pipe';
-import { spanOf } from '../tree';
 
 /**
  * An order of a PO-restricted project as the form edits it: the budget is the text typed. The

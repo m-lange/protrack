@@ -1,8 +1,8 @@
 import { Customer, Location, MonthKey, Project } from '../../../core/data/model';
 import { runsIn } from '../../../core/data/orders';
+import { buildTree } from '../../../core/data/tree';
 import { monthKey } from '../../../shared/dates/months';
 import { formatDays } from '../../../shared/pipes/days';
-import { buildTree } from '../tree';
 
 /** How many months the copy shows at most: the current one and the two after it. */
 const MONTHS = 3;

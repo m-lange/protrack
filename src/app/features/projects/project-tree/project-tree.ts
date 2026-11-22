@@ -15,6 +15,14 @@ import { BookingStore } from '../../../core/data/booking-store';
 import { CustomerStore } from '../../../core/data/customer-store';
 import { Order, ProjectStatus } from '../../../core/data/model';
 import { ProjectStore } from '../../../core/data/project-store';
+import {
+  CustomerNode,
+  DateSpan,
+  ProjectNode,
+  buildTree,
+  spanOf,
+  sum,
+} from '../../../core/data/tree';
 import { STRINGS } from '../../../i18n/strings';
 import { CustomerBadge } from '../../../shared/customer-badge/customer-badge';
 import { Icon } from '../../../shared/icon/icon';
@@ -24,7 +32,6 @@ import { DeltaPipe, deltaChip } from '../../../shared/pipes/delta-pipe';
 import { openOrder } from '../../../core/data/open-booking';
 import { timelineOf } from '../../../core/data/orders';
 import { TimelinePill } from '../../../shared/timeline-pill/timeline-pill';
-import { CustomerNode, DateSpan, ProjectNode, buildTree, spanOf, sum } from '../tree';
 import { TreeState, customerKey, projectKey } from '../tree-state';
 
 /**

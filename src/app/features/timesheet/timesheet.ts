@@ -20,6 +20,7 @@ import { Booking, Location, Order, Project } from '../../core/data/model';
 import { locationOf, runsIn, runsOn } from '../../core/data/orders';
 import { ProjectStore } from '../../core/data/project-store';
 import { SettingsStore } from '../../core/data/settings-store';
+import { buildTree, sum } from '../../core/data/tree';
 import { SelectedYear } from '../../core/selected-year';
 import { Shortcuts } from '../../core/shortcuts';
 import { TODAY } from '../../core/today';
@@ -33,7 +34,6 @@ import { formatHours, parseHours } from '../../shared/pipes/days';
 import { DaysPipe } from '../../shared/pipes/days-pipe';
 import { DeltaPipe, deltaChip } from '../../shared/pipes/delta-pipe';
 import { HoursPipe } from '../../shared/pipes/hours-pipe';
-import { buildTree, sum } from '../projects/tree';
 import { NoteChange, NoteDialog } from './note-dialog/note-dialog';
 import { OrderOption, OrderSelect } from './order-select/order-select';
 
