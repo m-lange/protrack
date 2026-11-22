@@ -16,8 +16,8 @@ import { projectColor } from '../../core/categories';
 import { BookingStore } from '../../core/data/booking-store';
 import { CustomerStore } from '../../core/data/customer-store';
 import { DayNoteStore } from '../../core/data/day-note-store';
-import { Booking, Location, Order, Project } from '../../core/data/model';
-import { locationOf, runsIn, runsOn } from '../../core/data/orders';
+import { Booking, Location } from '../../core/data/model';
+import { runsIn, runsOn } from '../../core/data/orders';
 import { ProjectStore } from '../../core/data/project-store';
 import { SettingsStore } from '../../core/data/settings-store';
 import { buildTree, sum } from '../../core/data/tree';
@@ -25,7 +25,7 @@ import { SelectedYear } from '../../core/selected-year';
 import { Shortcuts } from '../../core/shortcuts';
 import { TODAY } from '../../core/today';
 import { STRINGS } from '../../i18n/strings';
-import { HolidayId, holidaysOfYear, yearEndDays } from '../../shared/dates/holidays';
+import { holidaysOfYear, yearEndDays } from '../../shared/dates/holidays';
 import { isoDate, monthKey, parseIsoDate } from '../../shared/dates/months';
 import { Icon } from '../../shared/icon/icon';
 import { renderMarkdown } from '../../shared/markdown';
@@ -35,92 +35,8 @@ import { DaysPipe } from '../../shared/pipes/days-pipe';
 import { DeltaPipe, deltaChip } from '../../shared/pipes/delta-pipe';
 import { HoursPipe } from '../../shared/pipes/hours-pipe';
 import { NoteChange, NoteDialog } from './note-dialog/note-dialog';
-import { OrderOption, OrderSelect } from './order-select/order-select';
-
-/** A day of the shown month. */
-interface Day {
-  /** ISO date. */
-  date: string;
-  /** "Mon". */
-  weekday: string;
-  /** "3". */
-  dayOfMonth: string;
-  /** "Tue, Nov 3", for labels. */
-  label: string;
-  /** Weekends, public holidays and December 24 and 31 when they are off in full: greyed out. */
-  off: boolean;
-  /** A public holiday on the day; its name shows in the day cell. */
-  holiday: HolidayId | null;
-  today: boolean;
-  /** After today: its project color is lighter, like an order's in My projects. */
-  future: boolean;
-  /**
-   * The days a row books when an order is picked before any hours are typed: a full day, on
-   * December 24 and 31 only the part that is work (4 h for half days off, user 2026-11-10).
-   */
-  defaultDays: number;
-  /** A Monday after the 1st: a line above it sets the weeks apart. */
-  weekStart: boolean;
-  /** Days booked on the date over all orders. */
-  booked: number;
-}
-
-/** An order with what the timesheet shows of it. */
-interface OrderEntry {
-  order: Order;
-  project: Project;
-  option: OrderOption;
-}
-
-/** A row not booked yet: what has been picked or typed so far. */
-interface Draft {
-  /** Tells the rows being made on one day apart; NEW_DRAFT for the row of an empty day. */
-  id: number;
-  orderId: string | null;
-  /** Typed hours, in days. */
-  days: number | null;
-  /** A location of its own, null for the order's. */
-  location: Location | null;
-}
-
-/** The id of the empty row a day without bookings shows before anything is typed into it. */
-const NEW_DRAFT = -1;
-const EMPTY_DRAFT: Draft = { id: NEW_DRAFT, orderId: null, days: null, location: null };
-
-/** A row of the table: a booking, or an entry still being made. */
-interface Row {
-  /** The date and the row's place in its day, so a row keeps its fields once it is booked. */
-  key: string;
-  day: Day;
-  /** The first row of its day carries the day and its note. */
-  first: boolean;
-  booking: Booking | null;
-  /** The row being made, for a row without booking. */
-  draft: Draft | null;
-  /** A booking or a row with something in it: it can be deleted. */
-  canDelete: boolean;
-  entry: OrderEntry | null;
-  /** Booked or typed days. */
-  days: number;
-  /** Where the day is worked; null until an order is picked. */
-  location: Location | null;
-  /**
-   * The orders the row can take, project by project, the project booked last before the row's
-   * day first.
-   */
-  options: OrderOption[];
-  /** Days booked on the order in the month up to this row. */
-  total: number;
-  /** Days planned for the order in the month; null for none. */
-  forecast: number | null;
-  /**
-   * The order's budget less all days booked on it up to and including the row's day, over its
-   * whole timeline (user, 2026-11-10); null without an order or without a budget (open booking).
-   */
-  remaining: number | null;
-  /** Every row of the day has an order: + adds another row. */
-  canAdd: boolean;
-}
+import { OrderSelect } from './order-select/order-select';
+import { Day, Draft, EMPTY_DRAFT, NEW_DRAFT, OrderEntry, Row, buildRows } from './timesheet-rows';
 
 /** Single entries above this many days (16 h) are taken for typos. */
 const MAX_DAYS_PER_ENTRY = 2;
@@ -130,7 +46,8 @@ const FULL_DAY = 1;
 /**
  * My timesheet: one month, a row per day (and per further order booked on a day) with its
  * hours, project and order, location, and per row the order's Total, Forecast and Remaining in
- * the month up to that day, and the day's note (an icon that opens it in a dialog). The URL names the month: /timesheet/2026/11.
+ * the month up to that day, and the day's note (an icon that opens it in a dialog). The URL
+ * names the month: /timesheet/2026/11. The rows are built in timesheet-rows.ts.
  */
 @Component({
   selector: 'app-timesheet',
@@ -404,126 +321,20 @@ export class Timesheet {
     return days;
   });
 
-  /**
-   * Every order as the order pickers of a day list them (user, 2026-11-12): project by project,
-   * first the project booked on the nearest day before, then the one booked before that, and
-   * so on. Days without bookings don't count, nor do the day itself and the days after it. The
-   * orders of a project stay as in My projects; so do projects last booked on the same day and,
-   * at the end, those not booked before the day.
-   */
-  private listedOrders(date: string): OrderEntry[] {
-    const booked = this.bookedDays();
-    const entries = [...this.orders().values()];
-    const lastBefore = new Map<string, string>();
-    for (const { project } of entries) {
-      if (lastBefore.has(project.id)) continue;
-      const days = booked.get(project.id) ?? [];
-      let at = days.length - 1;
-      while (at >= 0 && days[at] >= date) at--;
-      lastBefore.set(project.id, at >= 0 ? days[at] : '');
-    }
-    // The sort is stable: projects that tie, and the orders of a project, stay as they were.
-    return entries.sort((a, b) =>
-      lastBefore.get(b.project.id)!.localeCompare(lastBefore.get(a.project.id)!),
-    );
-  }
-
   /** Rows being made, by date, in their order. A day without bookings always shows one. */
   private readonly drafts = signal<ReadonlyMap<string, readonly Draft[]>>(new Map());
   private nextDraftId = 0;
 
-  protected readonly rows = computed<Row[]>(() => {
-    const month = this.ref().key;
-    const orders = this.orders();
-    const drafts = this.drafts();
-    const byDate = new Map<string, Booking[]>();
-    for (const booking of this.bookings.bookings()) {
-      if (!booking.date.startsWith(month) || !orders.has(booking.orderId)) continue;
-      byDate.set(booking.date, [...(byDate.get(booking.date) ?? []), booking]);
-    }
-    const running = new Map<string, number>();
-    const forecastOf = (order: Order) =>
-      runsIn(order, month) && order.forecast[month] ? order.forecast[month] : null;
-    // All bookings of each order, to sum them up to a day.
-    const bookedOn = new Map<string, Booking[]>();
-    for (const booking of this.bookings.bookings()) {
-      bookedOn.set(booking.orderId, [...(bookedOn.get(booking.orderId) ?? []), booking]);
-    }
-    const remainingOf = (order: Order, date: string) =>
-      order.budget === null
-        ? null
-        : order.budget -
-          sum((bookedOn.get(order.id) ?? []).filter((b) => b.date <= date).map((b) => b.days));
-    const rows: Row[] = [];
-    for (const day of this.days()) {
-      // In the order they were made, so a row stays in place once it is booked.
-      const booked = byDate.get(day.date) ?? [];
-      let dayDrafts = drafts.get(day.date) ?? [];
-      if (!booked.length && !dayDrafts.length) dayDrafts = [EMPTY_DRAFT];
-      const taken = new Set([
-        ...booked.map((b) => b.orderId),
-        ...dayDrafts.flatMap((d) => (d.orderId ? [d.orderId] : [])),
-      ]);
-      // The orders a row can take: those of active projects running on the day, not on another
-      // row of the day, and the row's own; project by project, the project booked last before
-      // the day first.
-      const listed = this.listedOrders(day.date);
-      const optionsFor = (own: string | null) =>
-        listed
-          .filter(
-            ({ order, project }) =>
-              order.id === own ||
-              (project.status === 'active' && runsOn(order, day.date) && !taken.has(order.id)),
-          )
-          .map((e) => e.option);
-      const dayRows: Row[] = booked.map((booking) => {
-        const entry = orders.get(booking.orderId)!;
-        const total = (running.get(booking.orderId) ?? 0) + booking.days;
-        running.set(booking.orderId, total);
-        return {
-          key: '',
-          day,
-          first: false,
-          booking,
-          draft: null,
-          canDelete: true,
-          entry,
-          days: booking.days,
-          location: locationOf(booking, entry.order),
-          options: optionsFor(booking.orderId),
-          total,
-          forecast: forecastOf(entry.order),
-          remaining: remainingOf(entry.order, day.date),
-          canAdd: false,
-        };
-      });
-      for (const draft of dayDrafts) {
-        const entry = draft.orderId ? (orders.get(draft.orderId) ?? null) : null;
-        dayRows.push({
-          key: '',
-          day,
-          first: false,
-          booking: null,
-          draft,
-          canDelete: draft.id !== NEW_DRAFT,
-          entry,
-          days: draft.days ?? 0,
-          location: entry ? (draft.location ?? entry.order.location) : null,
-          options: optionsFor(entry?.order.id ?? null),
-          total: entry ? (running.get(entry.order.id) ?? 0) : 0,
-          forecast: entry ? forecastOf(entry.order) : null,
-          remaining: entry ? remainingOf(entry.order, day.date) : null,
-          canAdd: false,
-        });
-      }
-      dayRows.forEach((row, index) => (row.key = `${day.date}|${index}`));
-      dayRows[0].first = true;
-      const canAdd = dayRows.every((row) => row.entry !== null);
-      for (const row of dayRows) row.canAdd = canAdd;
-      rows.push(...dayRows);
-    }
-    return rows;
-  });
+  protected readonly rows = computed<Row[]>(() =>
+    buildRows({
+      month: this.ref().key,
+      days: this.days(),
+      orders: this.orders(),
+      bookings: this.bookings.bookings(),
+      bookedDays: this.bookedDays(),
+      drafts: this.drafts(),
+    }),
+  );
 
   /**
    * The month in all: hours booked, the forecast of all orders, and the remaining budget of the
