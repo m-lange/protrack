@@ -1,7 +1,7 @@
 {
   "name": "ProTrack",
   "short_name": "ProTrack",
-  "description": "Project and time tracking for one consultant: customers, projects and orders in person-days.",
+  "description": "Project and time tracking for one consultant: accounts, projects and orders in person-days.",
   "lang": "en",
   "id": "/",
   "start_url": "./",
